@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class Process {
+public class ImageProcessor {
     static double[][] sobelX = {{1,0,-1},{2,0,-2},{1,0,-1}};
     static double[][] sobelY = {{1,2,1},{0,0,0},{-1,-2,-1}};
     static int r = 0;
@@ -14,19 +14,20 @@ public class Process {
     public static void process(String imageFile){
         BufferedImage bf = readImage(imageFile);
         int[][][][] imageArray = convert2DArrayTO4DArray(bf);
-        int[][] gradient = edgeDetect(imageArray);
-        /*
-        for (int i = 0; i < gradient.length; i++) {
-            for (int j = 0; j < gradient[0].length; j++) {
-                System.out.print(gradient[i][j]);
-                System.out.print(" ");
-            }
-            System.out.println();
-        }
 
-         */
+        //pdf上给出的算法的改进版，通过利用sobel算子分别计算RGB三色的“能量”，求和后开平方得到图片的能量
+        //int[][] gradient = edgeDetect(imageArray);
+
+        //OpenCV的sobel算子边缘检测算法，通过先将图片由RGB转化为灰度图，再用灰度图求能量
+        int[][] gradient = edgeDetectGray(imageArray);
+
         BufferedImage gradientImage = createGrayScaleImage(gradient);
         displayImage(gradientImage);
+        try {
+            writeImageFile(gradientImage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     public static BufferedImage readImage(String imageFile){
         File file = new File(imageFile);
@@ -83,20 +84,9 @@ public class Process {
                         tempY += img[0][x+i][y+j][r]*sobelY[i][j];
                     }
                 }
+
                 redX[x + 1][y + 1] = tempX;
                 redY[x + 1][y + 1] = tempY;
-                /*
-                int result = (int) Math.sqrt(tempX*tempX+tempY*tempY);
-                //设置阈值
-                int GMax = 200;
-
-                if(result > GMax)result = 255;
-                if(result <= GMax)result = 0;
-
-                Color color = new Color(result,result,result);
-                graphics.setColor(color);
-                graphics.drawLine(x+size/2,y+size/2, x+size/2, y+size/2);
-                */
             }
         }
         for(int x = 0;x < width-size+1;x++){
@@ -154,6 +144,58 @@ public class Process {
         }
         return gradient;
     }
+    public static int[][] edgeDetectGray(int[][][][] img){
+        int width = img[0].length;
+        int height = img[0][0].length;
+        int size = 3;
+
+        int[][] gray = new int[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                int red = img[0][i][j][r];
+                int green = img[0][i][j][g];
+                int blue = img[0][i][j][b];
+                gray[i][j] = (int) (red * 0.3 + green * 0.59 + blue * 0.11);
+            }
+        }
+
+        int[][] gradientX = new int[width][height];
+        int[][] gradientY = new int[width][height];
+
+        for(int x = 0;x < width-size+1;x++){
+            for(int y = 0;y < height-size+1;y++){
+                int tempX = 0;
+                int tempY = 0;
+                for(int i = 0;i < size;i++){
+                    for(int j = 0;j < size;j++){
+                        tempX += gray[x+i][y+j] * sobelX[i][j];
+                        tempY += gray[x+i][y+j] * sobelY[i][j];
+                    }
+                }
+
+                gradientX[x + 1][y + 1] = tempX;
+                gradientY[x + 1][y + 1] = tempY;
+            }
+        }
+
+        int[][] power = new int[width][height];
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                //简化运算次数的版本，效果近似
+                //int tempX = Math.abs(gradientX[i][j]);
+                //int tempY = Math.abs(gradientY[i][j]);
+                //power[i][j] = (tempX + tempY);
+
+                int tempX = gradientX[i][j] * gradientX[i][j];
+                int tempY = gradientY[i][j] * gradientY[i][j];
+                power[i][j] = (int) Math.sqrt(tempX + tempY);
+            }
+        }
+
+        return power;
+    }
+
     public static BufferedImage createGrayScaleImage(int[][] grayScaleArray) {
         int width = grayScaleArray.length;
         int height = grayScaleArray[0].length;
@@ -162,6 +204,7 @@ public class Process {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int gray = grayScaleArray[x][y];
+                gray = Math.min(255,gray);
                 int color = (gray << 16) | (gray << 8) | gray;
                 image.setRGB(x, y, color);
             }
@@ -232,4 +275,8 @@ public class Process {
         frame.setVisible(true);
     }
 
+    public static void writeImageFile(BufferedImage bi) throws IOException {
+        File outputfile = new File("saved.png");
+        ImageIO.write(bi, "png", outputfile);
+    }
 }
