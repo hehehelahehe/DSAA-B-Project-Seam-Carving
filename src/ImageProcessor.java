@@ -193,6 +193,14 @@ public class ImageProcessor {
             }
         }
 
+        //边缘像素赋值为255
+        for (int i = 0; i < width; i++) {
+            power[i][0] = power[i][height-1] = 255;
+        }
+        for (int i = 0; i < height; i++) {
+            power[0][i] = power[width-1][i] = 255;
+        }
+
         return power;
     }
 
