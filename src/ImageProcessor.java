@@ -228,7 +228,7 @@ public class ImageProcessor {
 
         // 创建JFrame来作为主窗口
         JFrame frame = new JFrame("梯度图");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // 创建一个JPanel，你将在这个JPanel上绘制图像
         JPanel panel = new JPanel() {

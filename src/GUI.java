@@ -1,16 +1,20 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 
 public class GUI {
     private List<File> droppedFiles;
+    private BufferedImage image;
 
     public GUI() {
         droppedFiles = new ArrayList<>();
@@ -19,14 +23,14 @@ public class GUI {
 
     private void createAndShow() {
         // Create JFrame object and set title and size
-        JFrame frame = new JFrame("Image Processor");
+        JFrame frame = new JFrame("Carver");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
         frame.setLayout(new BorderLayout());
     
         // Create JPanel for the drop area
         JPanel dropPanel = new JPanel(new BorderLayout());
-        dropPanel.setBorder(BorderFactory.createTitledBorder("Drop Area"));
+        dropPanel.setBorder(BorderFactory.createTitledBorder("Drag and Drop Image Here"));
     
         // Create JLabel to display dropped image
         JLabel imageLabel = new JLabel();
@@ -62,10 +66,7 @@ public class GUI {
         buttonPanel.add(processButton);
     
         JButton carveButton = new JButton("Carve");
-        carveButton.addActionListener(e -> {
-            // Implement the carve functionality
-            JOptionPane.showMessageDialog(frame, "Carving functionality not implemented yet.");
-        });
+        carveButton.addActionListener(new CarveButtonListener(droppedFiles));
         buttonPanel.add(carveButton);
     
         JButton expandButton = new JButton("Expand");
@@ -88,6 +89,49 @@ public class GUI {
             JOptionPane.showMessageDialog(frame, "Select to delete functionality not implemented yet.");
         });
         buttonPanel.add(deleteButton);
+
+
+        JButton loadButton = new JButton("Load");
+        loadButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                int result = fileChooser.showOpenDialog(frame);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    try {
+                        image = ImageIO.read(selectedFile);
+                        imageLabel.setIcon(new ImageIcon(image));
+                        GUI.this.droppedFiles.add(selectedFile);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+        buttonPanel.add(loadButton);
+
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (image != null) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    int result = fileChooser.showSaveDialog(frame);
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        try {
+                            ImageIO.write(image, "PNG", selectedFile);
+                            JOptionPane.showMessageDialog(frame, "图像保存成功！");
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+        buttonPanel.add(saveButton);
+
     
         // Add components to the frame
         frame.add(dropPanel, BorderLayout.CENTER);
@@ -95,6 +139,7 @@ public class GUI {
     
         // Make the frame visible
         frame.setVisible(true);
+
     }
 
     public static void main(String[] args) {
@@ -119,6 +164,37 @@ class ProcessButtonListener implements ActionListener {
                 @Override
                 protected Void doInBackground() throws Exception {
                     ImageProcessor.process(file.getAbsolutePath());
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    JOptionPane.showMessageDialog(null, "图像处理成功！");
+                }
+            };
+            worker.execute();
+        } else {
+            JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
+        }
+    }
+}
+
+
+class CarveButtonListener implements ActionListener {
+    private List<File> droppedFiles;
+
+    public CarveButtonListener(List<File> droppedFiles) {
+        this.droppedFiles = droppedFiles;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (!droppedFiles.isEmpty()) {
+            File file = droppedFiles.get(0); // 只处理第一个文件
+            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    SeamCarver.shrinkImage(file.getAbsolutePath());
                     return null;
                 }
 
