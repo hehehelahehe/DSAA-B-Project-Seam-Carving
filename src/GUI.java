@@ -17,24 +17,25 @@ public class GUI {
     private BufferedImage image;
     private JTextField widthTextField;//创建输入目标宽度的窗口
     private JTextField heightTextField;//创建输入目标高度的窗口
-    private int targetWidth;//目标宽度
-    private int targetHeight;//目标高度
+    private static int targetWidth;//目标宽度
+    private static int targetHeight;//目标高度
+    private JFrame frame; // 主窗口
+    private JPanel dropPanel; // 用于显示结果图像的面板
+
 
 
     public GUI() {
         droppedFiles = new ArrayList<>();
-        createAndShow();
-    }
-
-    private void createAndShow() {
+        
+    
         // Create JFrame object and set title and size
-        JFrame frame = new JFrame("Carver");
+        frame = new JFrame("Carver");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
         frame.setLayout(new BorderLayout());
     
         // Create JPanel for the drop area
-        JPanel dropPanel = new JPanel(new BorderLayout());
+        dropPanel = new JPanel();
         dropPanel.setBorder(BorderFactory.createTitledBorder("Drag and Drop Image Here"));
     
         // Create JLabel to display dropped image
@@ -53,10 +54,10 @@ public class GUI {
          dropPanel.add(widthLabel);
          dropPanel.add(widthTextField);
          dropPanel.add(heightLabel);
-         dropPanel.add(heightTextField);
-    
+        dropPanel.add(heightTextField);
+
         // Set up DropTarget for the drop area
-        DropTarget dropTarget = new DropTarget(dropPanel, new DropTargetAdapter() {
+        new DropTarget(dropPanel, new DropTargetAdapter() {
             @Override
             public void drop(DropTargetDropEvent event) {
                 event.acceptDrop(DnDConstants.ACTION_COPY);
@@ -85,7 +86,7 @@ public class GUI {
         buttonPanel.add(processButton);
     
         JButton carveButton = new JButton("Carve");
-        carveButton.addActionListener(new CarveButtonListener(droppedFiles));
+        carveButton.addActionListener(new CarveButtonListener(droppedFiles, this));
         buttonPanel.add(carveButton);
     
         JButton expandButton = new JButton("Expand");
@@ -166,12 +167,23 @@ public class GUI {
     }
 
 
-    public int getTargetHeight(){
-        return this.targetHeight;
+    public static int getTargetHeight(){
+        return targetHeight;
     }
 
-    public int getTargetWidth(){
-        return this.targetWidth;
+    public static int getTargetWidth(){
+        return targetWidth;
+    }
+
+    public void displayResultImage(BufferedImage resultImage) {
+        dropPanel.removeAll(); // 清除面板上的现有组件
+
+        JLabel resultImageLabel = new JLabel(new ImageIcon(resultImage));
+        resultImageLabel.setHorizontalAlignment(JLabel.CENTER);
+        dropPanel.add(resultImageLabel, BorderLayout.CENTER);
+
+        dropPanel.revalidate(); // 重新布局面板
+        dropPanel.repaint(); // 重绘面板
     }
 }
 
@@ -205,35 +217,36 @@ class ProcessButtonListener implements ActionListener {
             JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
         }
     }
-
+}
 
 
 class CarveButtonListener implements ActionListener {
-    private List<File> droppedFiles;
+    private final List<File> droppedFiles;
+    private final GUI gui;
 
-    public CarveButtonListener(List<File> droppedFiles) {
+    public CarveButtonListener(List<File> droppedFiles, GUI gui) {
         this.droppedFiles = droppedFiles;
+        this.gui = gui;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (!droppedFiles.isEmpty()) {
-            File file = droppedFiles.get(0); // 只处理第一个文件
-            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    SeamCarver.shrinkImage(file.getAbsolutePath());
-                    return null;
-                }
+            File file = droppedFiles.get(0); // Only process the first dropped file
 
-                @Override
-                protected void done() {
-                    JOptionPane.showMessageDialog(null, "图像处理成功！");
-                }
-            };
-            worker.execute();
-        } else {
-            JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
+            try {
+                BufferedImage image = ImageIO.read(file);
+                int targetWidth = GUI.getTargetWidth();
+                int targetHeight = GUI.getTargetHeight();
+
+                SeamCarver seamCarver = new SeamCarver();
+                BufferedImage resultImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
+
+                gui.displayResultImage(resultImage); // 在GUI中显示结果图像
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }
