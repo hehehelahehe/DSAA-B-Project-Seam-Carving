@@ -26,7 +26,6 @@ public class GUI {
 
     public GUI() {
         droppedFiles = new ArrayList<>();
-        
     
         // Create JFrame object and set title and size
         frame = new JFrame("Carver");
@@ -41,21 +40,25 @@ public class GUI {
         // Create JLabel to display dropped image
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
-
-         // 创建文本标签
-         JLabel widthLabel = new JLabel("输入目标宽度：");
-         JLabel heightLabel = new JLabel("输入目标高度：");
- 
-         // 创建文本框
-         widthTextField = new JTextField(10);
-         heightTextField = new JTextField(10);
-
-         dropPanel.setLayout(new FlowLayout());
-         dropPanel.add(widthLabel);
-         dropPanel.add(widthTextField);
-         dropPanel.add(heightLabel);
+    
+        // 创建文本标签
+        JLabel widthLabel = new JLabel("输入目标宽度：");
+        JLabel heightLabel = new JLabel("输入目标高度：");
+    
+        // 创建文本框
+        widthTextField = new JTextField(10);
+        heightTextField = new JTextField(10);
+    
+        dropPanel.setLayout(new FlowLayout());
+        dropPanel.add(widthLabel);
+        dropPanel.add(widthTextField);
+        dropPanel.add(heightLabel);
         dropPanel.add(heightTextField);
-
+    
+        // 创建文本标签用于显示图片大小
+        JLabel sizeLabel = new JLabel("Image Size: - x -");
+        dropPanel.add(sizeLabel);
+    
         // Set up DropTarget for the drop area
         new DropTarget(dropPanel, new DropTargetAdapter() {
             @Override
@@ -69,6 +72,12 @@ public class GUI {
                             File file = droppedFiles.get(0); // Only process the first dropped file
                             imageLabel.setIcon(new ImageIcon(file.getAbsolutePath()));
                             GUI.this.droppedFiles.add(file); // Add the file to the list
+    
+                            // 显示图片大小
+                            BufferedImage image = ImageIO.read(file);
+                            int width = image.getWidth();
+                            int height = image.getHeight();
+                            sizeLabel.setText("Image Size: " + width + " x " + height);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
