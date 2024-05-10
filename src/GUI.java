@@ -15,6 +15,11 @@ import java.awt.image.BufferedImage;
 public class GUI {
     private List<File> droppedFiles;
     private BufferedImage image;
+    private JTextField widthTextField;//创建输入目标宽度的窗口
+    private JTextField heightTextField;//创建输入目标高度的窗口
+    private int targetWidth;//目标宽度
+    private int targetHeight;//目标高度
+
 
     public GUI() {
         droppedFiles = new ArrayList<>();
@@ -35,6 +40,20 @@ public class GUI {
         // Create JLabel to display dropped image
         JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
+
+         // 创建文本标签
+         JLabel widthLabel = new JLabel("输入目标宽度：");
+         JLabel heightLabel = new JLabel("输入目标高度：");
+ 
+         // 创建文本框
+         widthTextField = new JTextField(10);
+         heightTextField = new JTextField(10);
+
+         dropPanel.setLayout(new FlowLayout());
+         dropPanel.add(widthLabel);
+         dropPanel.add(widthTextField);
+         dropPanel.add(heightLabel);
+         dropPanel.add(heightTextField);
     
         // Set up DropTarget for the drop area
         DropTarget dropTarget = new DropTarget(dropPanel, new DropTargetAdapter() {
@@ -145,6 +164,15 @@ public class GUI {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GUI::new);
     }
+
+
+    public int getTargetHeight(){
+        return this.targetHeight;
+    }
+
+    public int getTargetWidth(){
+        return this.targetWidth;
+    }
 }
 
 
@@ -177,7 +205,7 @@ class ProcessButtonListener implements ActionListener {
             JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
         }
     }
-}
+
 
 
 class CarveButtonListener implements ActionListener {
