@@ -17,39 +17,93 @@ public class SeamCarver {
         return image;
     }
 
-    private int[][] computeEnergyMap(BufferedImage image) {
+    private static int[][] computeEnergyMap(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-        int[][] energyMap = new int[width][height];
+
 
         // Compute the energy map of the image (e.g., using gradient-based methods)
 
-        return energyMap;
+        return ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
     }
 
-    private int[][] computeCumulativeEnergyMap(int[][] energyMap) {
-        int width = energyMap.length;
-        int height = energyMap[0].length;
-        int[][] cumulativeEnergyMap = new int[width][height];
+    private static int[][] computeCumulativeEnergyMap(int[][] energyMap) {
+        int rows = energyMap.length;
+        int cols = energyMap[0].length;
+        int[][] cumulativeEnergyMap = new int[rows][cols];
+        System.arraycopy(energyMap[0], 0, cumulativeEnergyMap[0], 0, cols);
 
-        // Compute the cumulative energy map using dynamic programming
+        for (int i = 1; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                int minEnergy = Integer.MAX_VALUE;
+
+
+                int prevRow = i - 1;
+                int prevCol = Math.max(j - 1, 0);
+                int nextCol = Math.min(j + 1, cols - 1);
+
+
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][prevCol]);
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][j]);
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][nextCol]);
+
+
+                cumulativeEnergyMap[i][j] = energyMap[i][j] + minEnergy;
+            }
+        }
 
         return cumulativeEnergyMap;
     }
 
-    private int[] findVerticalSeam(int[][] cumulativeEnergyMap) {
-        int width = cumulativeEnergyMap.length;
-        int height = cumulativeEnergyMap[0].length;
-        int[] seam = new int[height];
+    private static int[] findVerticalSeam(int[][] cumulativeEnergyMap) {
+        int rows = cumulativeEnergyMap.length;
+        int cols = cumulativeEnergyMap[0].length;
 
-        // Find the vertical seam with the lowest cumulative energy using dynamic programming
 
-        return seam;
+        int minEnergyCol = 0;
+        int minEnergy = cumulativeEnergyMap[rows - 1][0];
+        for (int j = 1; j < cols; j++) {
+            if (cumulativeEnergyMap[rows - 1][j] < minEnergy) {
+                minEnergy = cumulativeEnergyMap[rows - 1][j];
+                minEnergyCol = j;
+            }
+        }
+
+        int[] minEnergyPath = new int[rows];
+        minEnergyPath[rows - 1] = minEnergyCol;
+
+
+        for (int i = rows - 2; i >= 0; i--) {
+            int currentCol = minEnergyPath[i + 1];
+            int prevCol = currentCol;
+            int nextCol = currentCol;
+
+
+            if (currentCol > 0) {
+                prevCol = currentCol - 1;
+            }
+            if (currentCol < cols - 1) {
+                nextCol = currentCol + 1;
+            }
+
+
+            if (cumulativeEnergyMap[i][prevCol] <= cumulativeEnergyMap[i][currentCol]
+                    && cumulativeEnergyMap[i][prevCol] <= cumulativeEnergyMap[i][nextCol]) {
+                minEnergyPath[i] = prevCol;
+            } else if (cumulativeEnergyMap[i][nextCol] <= cumulativeEnergyMap[i][currentCol]
+                    && cumulativeEnergyMap[i][nextCol] <= cumulativeEnergyMap[i][prevCol]) {
+                minEnergyPath[i] = nextCol;
+            } else {
+                minEnergyPath[i] = currentCol;
+            }
+        }
+
+        return minEnergyPath;
     }
 
-    private BufferedImage removeSeam(BufferedImage image, int[] seam) {
-        int width = image.getWidth();
-        int height = image.getHeight() - 1;
+    private static BufferedImage removeSeam(BufferedImage image, int[] seam) {
+        int width = image.getWidth() - 1;
+        int height = image.getHeight();
 
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
@@ -68,8 +122,15 @@ public class SeamCarver {
         return newImage;
     }
 
-    public static void shrinkImage(String absolutePath) {
+    public static BufferedImage shrinkImage(String absolutePath,int n) {// n is original picture width minus wanted picture width
+        BufferedImage bf = ImageProcessor.readImage(absolutePath);
+
+        for(int i = 0; i < n; i++){
+            int [][] energyMap = computeEnergyMap(bf);
+            int [][] cumulativeEnergyMap = computeCumulativeEnergyMap(energyMap);
+            removeSeam(bf, findVerticalSeam(cumulativeEnergyMap));
+        }
+        return bf;
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'shrinkImage'");
     }
 }
