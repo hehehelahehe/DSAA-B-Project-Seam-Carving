@@ -21,11 +21,6 @@ public class GUI {
     private static int targetHeight;//目标高度
     private JFrame frame; // 主窗口
     private JPanel dropPanel; // 用于显示结果图像的面板
-    // Create JLabel to display dropped image
-    JLabel imageLabel = new JLabel();
-    // 创建文本标签
-    JLabel widthLabel = new JLabel("输入目标宽度：");
-    JLabel heightLabel = new JLabel("输入目标高度：");
 
 
 
@@ -42,10 +37,13 @@ public class GUI {
         dropPanel = new JPanel();
         dropPanel.setBorder(BorderFactory.createTitledBorder("Drag and Drop Image Here"));
     
-        
+        // Create JLabel to display dropped image
+        JLabel imageLabel = new JLabel();
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
     
-        
+        // 创建文本标签
+        JLabel widthLabel = new JLabel("输入目标宽度：");
+        JLabel heightLabel = new JLabel("输入目标高度：");
     
         // 创建文本框
         widthTextField = new JTextField(10);
