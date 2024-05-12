@@ -1,5 +1,5 @@
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+
 
 public class SeamCarver {
     public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight) {
@@ -9,19 +9,34 @@ public class SeamCarver {
         while (currentWidth > targetWidth || currentHeight > targetHeight) {
             int[][] energyMap = computeEnergyMap(image);
             int[][] cumulativeEnergyMap = computeCumulativeEnergyMap(energyMap);
-            int[] seam = findVerticalSeam(cumulativeEnergyMap);
+            int[] seam = findHorizontalSeam(cumulativeEnergyMap);
 
-            image = removeSeam(image, seam);
-            currentWidth--;
+            image = removeHorizontalSeam(image, seam);
+            currentHeight--;
         }
 
         return image;
     }
+/*
+    public static int[][] rotateArray90Degrees(int[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
 
+        int[][] rotatedMatrix = new int[cols][rows];
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                rotatedMatrix[col][rows - row - 1] = matrix[row][col];
+            }
+        }
+
+        return rotatedMatrix;
+    }
+*/
     private static int[][] computeEnergyMap(BufferedImage image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
+
         int [][]test;
+        System.out.println(image.getWidth() + " " + image.getHeight());
         test = ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
         System.out.println(test.length);
         System.out.println(test[0].length);
@@ -58,7 +73,7 @@ public class SeamCarver {
         return cumulativeEnergyMap;
     }
 
-    private static int[] findVerticalSeam(int[][] cumulativeEnergyMap) {
+    private static int[] findHorizontalSeam(int[][] cumulativeEnergyMap) {
         int rows = cumulativeEnergyMap.length;
         int cols = cumulativeEnergyMap[0].length;
 
@@ -104,20 +119,20 @@ public class SeamCarver {
         return minEnergyPath;
     }
 
-    private static BufferedImage removeSeam(BufferedImage image, int[] seam) {
-        int width = image.getWidth() - 1;
-        int height = image.getHeight();
+    private static BufferedImage removeHorizontalSeam(BufferedImage image, int[] seam) {
+        int width = image.getWidth() ;
+        int height = image.getHeight() - 1;
 
         BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
-        for (int y = 0; y < height; y++) {
+        for (int y = 0; y < width; y++) {
             int seamX = seam[y];
 
-            for (int x = 0; x < width; x++) {
+            for (int x = 0; x < height; x++) {
                 if (x < seamX) {
-                    newImage.setRGB(x, y, image.getRGB(x, y));
+                    newImage.setRGB(y, height - 1 - x, image.getRGB(y, height - x));
                 } else {
-                    newImage.setRGB(x, y, image.getRGB(x + 1, y));
+                    newImage.setRGB(y, height - 1 - x, image.getRGB(y,height - x - 1));
                 }
             }
         }
@@ -125,15 +140,5 @@ public class SeamCarver {
         return newImage;
     }
 
-    public static BufferedImage shrinkImage(String absolutePath,int n) {// n is original picture width minus wanted picture width
-        BufferedImage bf = ImageProcessor.readImage(absolutePath);
 
-        for(int i = 0; i < n; i++){
-            int [][] energyMap = computeEnergyMap(bf);
-            int [][] cumulativeEnergyMap = computeCumulativeEnergyMap(energyMap);
-            removeSeam(bf, findVerticalSeam(cumulativeEnergyMap));
-        }
-        return bf;
-        // TODO Auto-generated method stub
-    }
 }
