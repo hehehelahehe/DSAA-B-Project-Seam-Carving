@@ -21,10 +21,12 @@ public class SeamCarver {
     private static int[][] computeEnergyMap(BufferedImage image) {
         int width = image.getWidth();
         int height = image.getHeight();
-
-
+        int [][]test;
+        test = ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
+        System.out.println(test.length);
+        System.out.println(test[0].length);
         // Compute the energy map of the image (e.g., using gradient-based methods)
-        return ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
+        return test;
         //return ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
     }
 
