@@ -16,10 +16,10 @@ public class ImageProcessor {
         int[][][][] imageArray = convert2DArrayTO4DArray(bf);
 
         //pdf上给出的算法的改进版，通过利用sobel算子分别计算RGB三色的“能量”，求和后开平方得到图片的能量
-        //int[][] gradient = edgeDetect(imageArray);
+        int[][] gradient = edgeDetect(imageArray);
 
         //OpenCV的sobel算子边缘检测算法，通过先将图片由RGB转化为灰度图，再用灰度图求能量
-        int[][] gradient = edgeDetectGray(imageArray);
+        //int[][] gradient = edgeDetectGray(imageArray);
 
         BufferedImage gradientImage = createGrayScaleImage(gradient);
         displayImage(gradientImage);
@@ -63,6 +63,8 @@ public class ImageProcessor {
     }
 
     public static int[][] edgeDetect(int[][][][] img){
+        double[][] kernelX = {{1,0,-1},{2,0,-2},{1,0,-1}};
+        double[][] kernelY = {{1,2,1},{0,0,0},{-1,-2,-1}};
         int width = img[0].length;
         int height = img[0][0].length;
         int size = 3;
@@ -80,8 +82,8 @@ public class ImageProcessor {
                 int tempY = 0;
                 for(int i = 0;i < size;i++){
                     for(int j = 0;j < size;j++){
-                        tempX += img[0][x+i][y+j][r]*sobelX[i][j];
-                        tempY += img[0][x+i][y+j][r]*sobelY[i][j];
+                        tempX += img[0][x+i][y+j][r]*kernelX[i][j];
+                        tempY += img[0][x+i][y+j][r]*kernelY[i][j];
                     }
                 }
 
@@ -95,8 +97,8 @@ public class ImageProcessor {
                 int tempY = 0;
                 for(int i = 0;i < size;i++){
                     for(int j = 0;j < size;j++){
-                        tempX += img[0][x+i][y+j][g]*sobelX[i][j];
-                        tempY += img[0][x+i][y+j][g]*sobelY[i][j];
+                        tempX += img[0][x+i][y+j][g]*kernelX[i][j];
+                        tempY += img[0][x+i][y+j][g]*kernelY[i][j];
                     }
                 }
 
@@ -110,8 +112,8 @@ public class ImageProcessor {
                 int tempY = 0;
                 for(int i = 0;i < size;i++){
                     for(int j = 0;j < size;j++){
-                        tempX += img[0][x+i][y+j][b]*sobelX[i][j];
-                        tempY += img[0][x+i][y+j][b]*sobelY[i][j];
+                        tempX += img[0][x+i][y+j][b]*kernelX[i][j];
+                        tempY += img[0][x+i][y+j][b]*kernelY[i][j];
                     }
                 }
 
@@ -193,6 +195,7 @@ public class ImageProcessor {
             }
         }
 
+
         //边缘像素赋值为255
         for (int i = 0; i < width; i++) {
             power[i][0] = power[i][height-1] = 255;
@@ -200,6 +203,7 @@ public class ImageProcessor {
         for (int i = 0; i < height; i++) {
             power[0][i] = power[width-1][i] = 255;
         }
+
 
         return power;
     }

@@ -1,4 +1,5 @@
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 public class SeamCarver {
     public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight) {
@@ -23,8 +24,8 @@ public class SeamCarver {
 
 
         // Compute the energy map of the image (e.g., using gradient-based methods)
-
-        return ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
+        return ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
+        //return ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
     }
 
     private static int[][] computeCumulativeEnergyMap(int[][] energyMap) {

@@ -151,7 +151,8 @@ public class GUI {
                 int targetHeight = Integer.parseInt(heightTextField.getText());
     
                 BufferedImage carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
-    
+
+                ImageProcessor.writeImageFile(carvedImage);
                 // 更新图像和标签显示
                 imageLabel.setIcon(new ImageIcon(carvedImage));
                 sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
