@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 public class GUI {
     private File droppedFile;
     private BufferedImage image;
+    private BufferedImage carvedImage; // 添加一个成员变量来存储最后刻录的图像文件
     private JTextField widthTextField;//创建输入目标宽度的窗口
     private JTextField heightTextField;//创建输入目标高度的窗口
     private JLabel widthLabel = new JLabel("输入目标宽度：");
@@ -84,7 +85,14 @@ public class GUI {
         carveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                performImageCarving();
+                try {
+                    int targetWidth = Integer.parseInt(widthTextField.getText());
+                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    performImageCarving();
+                } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
+                    JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+                
             }
         });
         buttonPanel.add(carveButton);
@@ -107,12 +115,7 @@ public class GUI {
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                int result = fileChooser.showSaveDialog(dropPanel);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-                    saveImage(selectedFile);
-                }
+                    saveImage();               
             }
         });
         buttonPanel.add(saveButton);
@@ -150,13 +153,14 @@ public class GUI {
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
     
-                BufferedImage carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
-
-                ImageProcessor.writeImageFile(carvedImage);
+                this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
+    
                 // 更新图像和标签显示
-                imageLabel.setIcon(new ImageIcon(carvedImage));
-                sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
-                setDroppedFile(droppedFile);
+                this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                this.frame.revalidate();
+                this.frame.repaint();
+    
                 JOptionPane.showMessageDialog(null, "图像处理成功！");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -211,21 +215,81 @@ public class GUI {
         }
     }
 
-    private void saveImage(File file) {
-        if (droppedFile != null) {
-            try {
-                BufferedImage image = ImageIO.read(droppedFile);
-                ImageIO.write(image, "png", file); // 保存为PNG格式，可以根据需要修改
-                JOptionPane.showMessageDialog(null, "图像保存成功！");
-            } catch (IOException e) {
-                e.printStackTrace();
+    private void saveImage() {
+        if (droppedFile != null && carvedImage != null) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Image");
+    
+            String fileName = droppedFile.getName();
+            String extension = ".png";
+            int dotIndex = fileName.lastIndexOf('.');
+            if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                extension = fileName.substring(dotIndex + 1);
+            }
+    
+            fileChooser.setSelectedFile(new File(fileName));
+    
+            int userChoice = fileChooser.showSaveDialog(frame);
+    
+            if (userChoice == JFileChooser.APPROVE_OPTION) {
+                File saveFile = fileChooser.getSelectedFile();
+    
+                if (saveFile.exists()) {
+                    JOptionPane.showMessageDialog(frame, "文件已存在，请选择其他文件名！", "错误", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+    
+                String filePath = saveFile.getAbsolutePath();
+    
+                try {
+                    // 将成员变量carvedImage保存为文件
+                    ImageIO.write(carvedImage, extension, new File(filePath));
+                    JOptionPane.showMessageDialog(frame, "图像保存成功！");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
+    
+    
+}
 
-    
-    
-    //     JButton expandButton = new JButton("Expand");
+
+
+class ProcessButtonListener implements ActionListener {
+    private GUI gui;
+
+    public ProcessButtonListener(GUI gui) {
+        this.gui = gui;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        File droppedFile = gui.getDroppedFile(); // 获取GUI实例中的droppedFile
+        if (droppedFile != null) {
+            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    ImageProcessor.process(droppedFile.getAbsolutePath());
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    gui.setDroppedFile(droppedFile);
+                    JOptionPane.showMessageDialog(null, "图像处理成功！");
+                    
+                }
+            };
+            worker.execute();
+        } else {
+            JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
+        }
+    }
+}
+
+//     JButton expandButton = new JButton("Expand");
     //     expandButton.addActionListener(e -> {
     //         // Implement the expand functionality
     //         JOptionPane.showMessageDialog(frame, "Expand functionality not implemented yet.");
@@ -321,43 +385,6 @@ public class GUI {
     //     dropPanel.revalidate(); // 重新布局面板
     //     dropPanel.repaint(); // 重绘面板
     // }
-}
-
-
-
-class ProcessButtonListener implements ActionListener {
-    private GUI gui;
-
-    public ProcessButtonListener(GUI gui) {
-        this.gui = gui;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        File droppedFile = gui.getDroppedFile(); // 获取GUI实例中的droppedFile
-        if (droppedFile != null) {
-            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    ImageProcessor.process(droppedFile.getAbsolutePath());
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    gui.setDroppedFile(droppedFile);
-                    JOptionPane.showMessageDialog(null, "图像处理成功！");
-                    
-                }
-            };
-            worker.execute();
-        } else {
-            JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
-        }
-    }
-}
-
-
 // class CarveButtonListener implements ActionListener {
 //     private final List<File> droppedFiles;
 //     private final GUI gui;
