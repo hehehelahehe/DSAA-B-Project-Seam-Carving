@@ -1,5 +1,7 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -11,10 +13,12 @@ import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.event.MouseAdapter; // Import the MouseAdapter class
 
 public class GUI {
     private File droppedFile;
     private BufferedImage image;
+    private BufferedImage originalImage; // 添加一个成员变量来存储原始图像文件
     private BufferedImage carvedImage; // 添加一个成员变量来存储最后刻录的图像文件
     private JTextField widthTextField;//创建输入目标宽度的窗口
     private JTextField heightTextField;//创建输入目标高度的窗口
@@ -29,6 +33,15 @@ public class GUI {
     private JPanel infoPanel; // 用于显示信息的面板
     private JLabel imageLabel; // 用于显示图像的标签
     private SeamCarver seamCarver = new SeamCarver();
+    private boolean SelectToProtect = false;
+    private boolean SelectToDelete = false;
+    private static Point startPoint;
+    private static Point endPoint;
+    private int selectedWidth;
+    private int selectedHeight;
+    private boolean rectangleDrawn = false;
+
+
     
     public GUI(){
         // Create JFrame object and set title and size
@@ -42,7 +55,7 @@ public class GUI {
         this.dropPanel.setBorder(BorderFactory.createTitledBorder("Drag and Drop Image Here"));
 
         imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);    
         dropPanel.add(imageLabel, BorderLayout.CENTER);
 
         //创建用于输入目标长宽的窗口
@@ -119,6 +132,38 @@ public class GUI {
             }
         });
         buttonPanel.add(saveButton);
+
+        JButton protectButton = new JButton("Select To Protect");
+        protectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (SelectToProtect == false) {
+                    SelectToProtect = true;
+                    SelectToDelete = false;
+                }
+                else{
+                    SelectToProtect = false;                    
+                }
+                switchOfProtectMode();
+            }
+        });
+        buttonPanel.add(protectButton);
+
+        JButton deleteButton = new JButton("Select To Delete");
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (SelectToDelete == false) {
+                    SelectToDelete = true;
+                    SelectToProtect = false;
+                }
+                else{
+                    SelectToDelete = false;                    
+                }
+                switchOfDeleteMode();
+            }
+        });
+        buttonPanel.add(deleteButton);
                 
 
 
@@ -134,12 +179,12 @@ public class GUI {
             this.droppedFile = file;
 
             // 读取图像文件并显示在imageLabel中
-            image = ImageIO.read(file);
-            imageLabel.setIcon(new ImageIcon(image));
+            this.image = ImageIO.read(file);
+            this.imageLabel.setIcon(new ImageIcon(this.image));
 
             // 获取图像的宽度和高度并更新标签
-            int width = image.getWidth();
-            int height = image.getHeight();
+            int width = this.image.getWidth();
+            int height = this.image.getHeight();
             sizeLabel.setText("Image Size: " + width + " x " + height);
         } catch (IOException e) {
             e.printStackTrace();
@@ -149,7 +194,7 @@ public class GUI {
     private void performImageCarving() {
         if (droppedFile != null) {
             try {
-                BufferedImage image = ImageIO.read(droppedFile);
+                this.image = ImageIO.read(droppedFile);
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
     
@@ -160,6 +205,7 @@ public class GUI {
                 this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
                 this.frame.revalidate();
                 this.frame.repaint();
+                this.image = this.carvedImage;
     
                 JOptionPane.showMessageDialog(null, "图像处理成功！");
             } catch (IOException e) {
@@ -176,9 +222,9 @@ public class GUI {
         droppedFile = file;
         // 更新图像和标签显示
         try {
-            BufferedImage image = ImageIO.read(droppedFile);
-            imageLabel.setIcon(new ImageIcon(image));
-            sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+            this.image = ImageIO.read(droppedFile);
+            this.imageLabel.setIcon(new ImageIcon(image));
+            this.sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -205,11 +251,11 @@ public class GUI {
 
     private void loadImage(File file) {
         try {
-            BufferedImage image = ImageIO.read(file);
-            imageLabel.setIcon(new ImageIcon(image));
-            imageLabel.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-            sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
-            droppedFile = file;
+            this.image = ImageIO.read(file);
+            this.imageLabel.setIcon(new ImageIcon(this.image));
+            this.imageLabel.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+            this.sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+            this.droppedFile = file;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -251,7 +297,110 @@ public class GUI {
             }
         }
     }
+
+    private void switchOfProtectMode() {        
+        MouseListener myMouseListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                startPoint = e.getPoint();
+                System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+            }
+        
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                endPoint = e.getPoint();
+                System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                calculateDimensions();
+                drawRectangle();
+            }
+        };
+        if (SelectToProtect == true) {
+            this.imageLabel.addMouseListener(myMouseListener);
+            
+        }
+        else{
+            this.imageLabel.removeMouseListener(myMouseListener);
+            if (rectangleDrawn) {
+                this.imageLabel.setIcon(new ImageIcon(originalImage));               
+                this.dropPanel.repaint();
+                this.rectangleDrawn = false; // 更新标志变量为矩形未绘
+            }
+        }
+    }
+
+    private void switchOfDeleteMode() {        
+        MouseListener myMouseListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                startPoint = e.getPoint();
+                System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+            }
+        
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                endPoint = e.getPoint();
+                System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                calculateDimensions();
+                drawRectangle();
+            }
+        };
+        if (SelectToDelete == true) {
+            this.imageLabel.addMouseListener(myMouseListener);
+            
+        }
+        else{
+            this.imageLabel.removeMouseListener(myMouseListener);
+            if (rectangleDrawn) {
+                this.imageLabel.setIcon(new ImageIcon(originalImage));               
+                this.dropPanel.repaint();
+                this.rectangleDrawn = false; // 更新标志变量为矩形未绘
+            }
+        }
+    }
+
+    private void calculateDimensions() {
+        this.selectedWidth = Math.abs(startPoint.x - endPoint.x);
+        this.selectedHeight = Math.abs(startPoint.y - endPoint.y);
+    }
+
+    private void drawRectangle() {
+        if (imageLabel.getIcon() != null) {
+            ImageIcon imageIcon = (ImageIcon) imageLabel.getIcon();
+            Image image = imageIcon.getImage();
+            this.originalImage = this.image;
     
+            BufferedImage bufferedImage = new BufferedImage(
+                    image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = bufferedImage.createGraphics();
+            g2d.drawImage(image, 0, 0, null);
+    
+
+    
+            if (SelectToDelete) {
+                g2d.setColor(Color.RED);
+            } else if (SelectToProtect){
+                g2d.setColor(Color.GREEN);
+            }
+            
+            int x = Math.min(startPoint.x, endPoint.x);
+            int y = Math.min(startPoint.y, endPoint.y);
+            g2d.drawRect(x, y, selectedWidth,selectedHeight);
+            g2d.dispose();
+    
+            imageLabel.setIcon(new ImageIcon(bufferedImage));
+            dropPanel.repaint();
+    
+            rectangleDrawn = true; // 更新标志变量为矩形已绘制
+        }
+    }
+    
+    public static Point getStartPoint(){
+        return startPoint;
+    }
+
+    public static Point getEndPoint(){
+        return endPoint;
+    }
     
 }
 
@@ -287,6 +436,10 @@ class ProcessButtonListener implements ActionListener {
             JOptionPane.showMessageDialog(null, "没有拖放图像文件。");
         }
     }
+
+    
+
+    
 }
 
 //     JButton expandButton = new JButton("Expand");
