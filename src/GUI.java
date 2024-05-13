@@ -33,8 +33,8 @@ public class GUI {
     private JPanel infoPanel; // 用于显示信息的面板
     private JLabel imageLabel; // 用于显示图像的标签
     private SeamCarver seamCarver = new SeamCarver();
-    private boolean SelectToProtect = false;
-    private boolean SelectToDelete = false;
+    private static boolean SelectToProtect = false;
+    private static boolean SelectToDelete = false;
     private static Point startPoint;
     private static Point endPoint;
     private int selectedWidth;
@@ -400,6 +400,14 @@ public class GUI {
 
     public static Point getEndPoint(){
         return endPoint;
+    }
+
+    public static boolean getSelectToProtect(){
+        return SelectToProtect;
+    }
+
+    public static boolean getSelectToDelete(){
+        return SelectToDelete;
     }
     
 }
