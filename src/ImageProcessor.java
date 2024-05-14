@@ -44,6 +44,8 @@ public class ImageProcessor {
         // 获取图片宽度和高度
         int width = bf.getWidth();   // 图片宽度
         int height = bf.getHeight();  //图片高度
+        System.out.println(width);
+        System.out.println(height);
         int channel = 3; // 3个通道
 
         int[] data = new int[width*height];
@@ -63,8 +65,10 @@ public class ImageProcessor {
     }
 
     public static int[][] edgeDetect(int[][][][] img){
-        double[][] kernelX = {{1,0,-1},{2,0,-2},{1,0,-1}};
-        double[][] kernelY = {{1,2,1},{0,0,0},{-1,-2,-1}};
+        double[][] kernelX = sobelX;
+        double[][] kernelY = sobelY;
+        //double[][] kernelX = {{0,0,0},{1,0,-1},{0,0,0}};
+        //double[][] kernelY = {{0,1,0},{0,0,0},{0,1,0}};
         int width = img[0].length;
         int height = img[0][0].length;
         int size = 3;

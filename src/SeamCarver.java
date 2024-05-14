@@ -1,4 +1,9 @@
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 
 public class SeamCarver {
@@ -27,7 +32,60 @@ public class SeamCarver {
     }
 
     public BufferedImage expandImage(BufferedImage image, int targetWidth,int targetHeight){
-        return null;
+        int Width = image.getWidth();
+        int Height = image.getHeight();
+
+        int numSeamsY = targetHeight - Height;//计算纵向扩展需要的seam数量
+        int numSeamsX = targetWidth - Width;//计算横向扩展需要的seam数量
+        int[][] energyMap = computeEnergyMap(image);
+
+        int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
+        List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
+        //displayPaths(seamsY,image);
+
+        for (int i = 0; i < seamsX.size(); i++) {
+            int[] seam = seamsX.get(i);
+            BufferedImage temp = new BufferedImage(Width, Height + 1, BufferedImage.TYPE_INT_RGB);
+            for (int j = 0; j < Width; j++) {
+                int a = seam[j];
+                for (int k = 0; k < Height + 1; k++) {
+                    if (k < a) {
+                        temp.setRGB(j, k, image.getRGB(j, k));
+                    } else if (k == a) {
+                        temp.setRGB(j, k, image.getRGB(j, k));
+                    } else {
+                        temp.setRGB(j, k, image.getRGB(j, k - 1));
+                    }
+                }
+            }
+            image = temp;
+            Height++;
+        }
+
+        energyMap = computeEnergyMap(image);//重新计算energyMap
+        int[][] cumulativeEnergyMapY = computeCumulativeVerticalEnergyMap(energyMap);//计算横向扩展所需的能量累积图
+        List<int[]> seamsY = findVerticalSeams(cumulativeEnergyMapY, numSeamsX);
+
+        for (int i = 0; i < seamsY.size(); i++) {
+            int[] seam = seamsY.get(i);
+            BufferedImage temp = new BufferedImage(Width + 1, Height, BufferedImage.TYPE_INT_RGB);
+            for (int j = 0; j < Height; j++) {
+                int a = seam[j];
+                for (int k = 0; k < Width + 1; k++) {
+                    if (k < a) {
+                        temp.setRGB(k, j, image.getRGB(k, j));
+                    } else if (k == a) {
+                        temp.setRGB(k, j, image.getRGB(k, j));
+                    } else {
+                        temp.setRGB(k, j, image.getRGB(k - 1, j));
+                    }
+                }
+            }
+            image = temp;
+            Width++;
+        }
+
+        return image;
     }
 /*
     public static int[][] rotateArray90Degrees(int[][] matrix) {
@@ -50,6 +108,7 @@ public class SeamCarver {
         int [][]test;
         System.out.println(image.getWidth() + " " + image.getHeight());
         test = ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
+        //test = ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
         System.out.println(test.length);
         System.out.println(test[0].length);
         return test;
@@ -246,4 +305,153 @@ public class SeamCarver {
         return newImage;
     }
 
+    public static List<int[]> findHorizontalSeams(int[][] cumulativeEnergyMap, int numSeams) {
+        int rows = cumulativeEnergyMap.length;
+        int cols = cumulativeEnergyMap[0].length;
+
+        List<int[]> selectedPaths = new ArrayList<>();
+        boolean[][] usedCols = new boolean[rows][cols];
+
+        // 找到最后一行能量最小的点并排序
+        Integer[] endCols = new Integer[cols];
+        for (int j = 0; j < cols; j++) {
+            endCols[j] = j;
+        }
+        Arrays.sort(endCols, Comparator.comparingInt(j -> cumulativeEnergyMap[rows - 1][j]));
+
+        // 找到指定数量的最小能量路径
+        for (int n = 0; n < numSeams; n++) {
+            int[] minEnergyPath = null;
+            int minEnergy = Integer.MAX_VALUE;
+
+            for (int col : endCols) {
+                if (usedCols[rows - 1][col]) {
+                    continue; // 跳过已经使用的列
+                }
+
+                int[] path = new int[rows];
+                path[rows - 1] = col;
+                int energy = cumulativeEnergyMap[rows - 1][col];
+
+                boolean validPath = true;
+
+                // 从底部回溯到顶部
+                for (int i = rows - 2; i >= 0; i--) {
+                    int currentCol = path[i + 1];
+                    int bestCol = currentCol;
+
+                    // 检查上方、中间和下方的三个位置，选择未被使用且累积能量最小的位置
+                    if (currentCol > 0 && !usedCols[i][currentCol - 1] && cumulativeEnergyMap[i][currentCol - 1] < cumulativeEnergyMap[i][bestCol]) {
+                        int tempCol = currentCol - 1;
+                        if (usedCols[i][tempCol]) continue;
+                        bestCol = currentCol - 1;
+                    }
+                    if (currentCol < cols - 1 && !usedCols[i][currentCol + 1] && cumulativeEnergyMap[i][currentCol + 1] < cumulativeEnergyMap[i][bestCol]) {
+                        int tempCol = currentCol + 1;
+                        if (usedCols[i][tempCol]) continue;
+                        bestCol = currentCol + 1;
+                    }
+
+                    path[i] = bestCol;
+                    energy += cumulativeEnergyMap[i][bestCol];
+                }
+
+                if (validPath && energy < minEnergy) {
+                    minEnergy = energy;
+                    minEnergyPath = path;
+                }
+            }
+
+            // 标记最小路径的列为已使用
+            if (minEnergyPath != null) {
+                for (int i = 0; i < rows; i++) {
+                    usedCols[i][minEnergyPath[i]] = true;
+                }
+                selectedPaths.add(minEnergyPath);
+            }
+        }
+
+        selectedPaths.sort((path1, path2) -> Integer.compare(path2[rows - 1], path1[rows - 1]));
+        return selectedPaths;
+    }
+    public static List<int[]> findVerticalSeams(int[][] cumulativeEnergyMap, int numSeams) {
+        int rows = cumulativeEnergyMap.length;
+        int cols = cumulativeEnergyMap[0].length;
+
+        List<int[]> selectedPaths = new ArrayList<>();
+        boolean[][] usedRows = new boolean[rows][cols];
+
+        // 找到最后一列能量最小的点并排序
+        Integer[] endRows = new Integer[rows];
+        for (int i = 0; i < rows; i++) {
+            endRows[i] = i;
+        }
+        Arrays.sort(endRows, Comparator.comparingInt(i -> cumulativeEnergyMap[i][cols - 1]));
+
+        // 找到指定数量的最小能量路径
+        for (int n = 0; n < numSeams; n++) {
+            int[] minEnergyPath = null;
+            int minEnergy = Integer.MAX_VALUE;
+
+            for (int row : endRows) {
+                if (usedRows[row][cols - 1]) {
+                    continue; // 跳过已经使用的行
+                }
+
+                int[] path = new int[cols];
+                path[cols - 1] = row;
+                int energy = cumulativeEnergyMap[row][cols - 1];
+
+                boolean validPath = true;
+
+                // 从右向左回溯到左边
+                for (int j = cols - 2; j >= 0; j--) {
+                    int currentRow = path[j + 1];
+                    int bestRow = currentRow;
+
+                    // 检查左上、左和左下的三个位置，选择未被使用且累积能量最小的位置
+                    if (currentRow > 0 && !usedRows[currentRow - 1][j] && cumulativeEnergyMap[currentRow - 1][j] < cumulativeEnergyMap[bestRow][j]) {
+                        int tempRow = currentRow - 1;
+                        if (usedRows[tempRow][j]) continue;
+                        bestRow = currentRow - 1;
+                    }
+                    if (currentRow < rows - 1 && !usedRows[currentRow + 1][j] && cumulativeEnergyMap[currentRow + 1][j] < cumulativeEnergyMap[bestRow][j]) {
+                        int tempRow = currentRow + 1;
+                        if (usedRows[tempRow][j]) continue;
+                        bestRow = currentRow + 1;
+                    }
+
+                    path[j] = bestRow;
+                    energy += cumulativeEnergyMap[bestRow][j];
+                }
+
+                if (validPath && energy < minEnergy) {
+                    minEnergy = energy;
+                    minEnergyPath = path;
+                }
+            }
+
+            // 标记最小路径的行为已使用
+            if (minEnergyPath != null) {
+                for (int j = 0; j < cols; j++) {
+                    usedRows[minEnergyPath[j]][j] = true;
+                }
+                selectedPaths.add(minEnergyPath);
+            }
+        }
+
+        // 对selectedPaths按每条路径的最后一个点的位置由大到小排序
+        selectedPaths.sort((path1, path2) -> Integer.compare(path2[cols - 1], path1[cols - 1]));
+
+        return selectedPaths;
+    }
+    public static void displayPaths(List<int[]> paths, BufferedImage image){
+        for (int i = 0; i < paths.size(); i++) {
+            int[] temp = paths.get(i);
+            for (int j = 0; j < image.getHeight(); j++) {
+                image.setRGB(temp[j],j, Color.red.getRGB());
+            }
+        }
+        ImageProcessor.displayImage(image);
+    }
 }
