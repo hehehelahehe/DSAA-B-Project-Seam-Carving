@@ -20,6 +20,7 @@ public class GUI {
     private BufferedImage image;
     private BufferedImage originalImage; // 添加一个成员变量来存储原始图像文件
     private BufferedImage carvedImage; // 添加一个成员变量来存储最后刻录的图像文件
+    private BufferedImage expandedImage;//添加一个变量来存储最后放大的图像文件
     private JTextField widthTextField;//创建输入目标宽度的窗口
     private JTextField heightTextField;//创建输入目标高度的窗口
     private JLabel widthLabel = new JLabel("输入目标宽度：");
@@ -32,6 +33,8 @@ public class GUI {
     private JPanel buttonPanel; // 用于显示按钮的面板
     private JPanel infoPanel; // 用于显示信息的面板
     private JLabel imageLabel; // 用于显示图像的标签
+    private JPanel hintPanel;//用于显示程序使用方法的面板
+    private JLabel hintLabel;//用于显示程序使用方法的标签
     private SeamCarver seamCarver = new SeamCarver();
     private static boolean SelectToProtect = false;
     private static boolean SelectToDelete = false;
@@ -54,19 +57,24 @@ public class GUI {
         this.dropPanel = new JPanel();
         this.dropPanel.setBorder(BorderFactory.createTitledBorder("Drag and Drop Image Here"));
 
-        imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(JLabel.CENTER);    
-        dropPanel.add(imageLabel, BorderLayout.CENTER);
+        this.imageLabel = new JLabel();
+        this.imageLabel.setHorizontalAlignment(JLabel.CENTER);    
+        this.dropPanel.add(imageLabel, BorderLayout.CENTER);
+
+        //创建用于显示程序使用方法的窗口和标签
+        this.hintPanel = new JPanel();
+        this.hintLabel = new JLabel("<html><font size = 5>使用方法：<br>点击Process按钮处理图片<br>点击Carve按钮裁剪图片<br>点击Load按钮加载图片<br>点击Save按钮保存图片<br>点击Select To Protect按钮选择保护区域<br>点击Select To Delete按钮选择优先删除区域</html>");
+        this.hintPanel.add(hintLabel);
 
         //创建用于输入目标长宽的窗口
-        infoPanel = new JPanel();
-        widthTextField = new JTextField(10);
-        heightTextField = new JTextField(10);
-        infoPanel.setLayout(new FlowLayout());
-        infoPanel.add(widthLabel);
-        infoPanel.add(widthTextField);
-        infoPanel.add(heightLabel);
-        infoPanel.add(heightTextField);
+        this.infoPanel = new JPanel();
+        this.widthTextField = new JTextField(10);
+        this.heightTextField = new JTextField(10);
+        this.infoPanel.setLayout(new FlowLayout());
+        this.infoPanel.add(widthLabel);
+        this.infoPanel.add(widthTextField);
+        this.infoPanel.add(heightLabel);
+        this.infoPanel.add(heightTextField);
 
         //创建文本标签显示图片大小
         infoPanel.add(sizeLabel);
@@ -109,6 +117,23 @@ public class GUI {
             }
         });
         buttonPanel.add(carveButton);
+
+        JButton expandButton = new JButton("Expand");
+        expandButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int targetWidth = Integer.parseInt(widthTextField.getText());
+                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    performImageExpanding();
+                } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
+                    JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            }
+        
+        });
+        buttonPanel.add(expandButton);
 
         JButton loadButton = new JButton("Load");
         loadButton.addActionListener(new ActionListener() {
@@ -163,13 +188,11 @@ public class GUI {
                 switchOfDeleteMode();
             }
         });
-        buttonPanel.add(deleteButton);
-                
-
-
+        buttonPanel.add(deleteButton);            
         frame.add(dropPanel, BorderLayout.CENTER);
         frame.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(infoPanel, BorderLayout.NORTH);
+        frame.add(hintPanel,BorderLayout.WEST);
         frame.setVisible(true);
         registerDragAndDrop();
     }
@@ -197,17 +220,50 @@ public class GUI {
                 this.image = ImageIO.read(droppedFile);
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
+                if (targetWidth > image.getWidth() || targetHeight > image.getHeight()){
+                    JOptionPane.showMessageDialog(null, "目标宽度或目标高度大于原图像的宽度或高度，请重新输入！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+                else{this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
     
-                this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
+                    // 更新图像和标签显示
+                    this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                    this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                    this.frame.revalidate();
+                    this.frame.repaint();
+                    this.image = this.carvedImage;
+        
+                    JOptionPane.showMessageDialog(null, "图像处理成功！");
+                }
     
-                // 更新图像和标签显示
-                this.imageLabel.setIcon(new ImageIcon(carvedImage));
-                this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
-                this.frame.revalidate();
-                this.frame.repaint();
-                this.image = this.carvedImage;
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void performImageExpanding(){
+        if (droppedFile != null) {
+            try {
+                this.image = ImageIO.read(droppedFile);
+                targetWidth = Integer.parseInt(widthTextField.getText());
+                targetHeight = Integer.parseInt(heightTextField.getText());
+                if (targetWidth < image.getWidth() || targetHeight < image.getHeight()){
+                    JOptionPane.showMessageDialog(null, "目标宽度或目标高度小于原图像的宽度或高度，请重新输入！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+                else{this.expandedImage = seamCarver.expandImage(this.image, targetWidth, targetHeight);
     
-                JOptionPane.showMessageDialog(null, "图像处理成功！");
+                    // 更新图像和标签显示
+                    this.imageLabel.setIcon(new ImageIcon(this.expandedImage));
+                    this.sizeLabel.setText("Image Size: " + expandedImage.getWidth() + " x " + expandedImage.getHeight());
+                    this.frame.revalidate();
+                    this.frame.repaint();
+                    this.image = this.expandedImage;
+        
+                    JOptionPane.showMessageDialog(null, "图像处理成功！");
+                }
+    
+                
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -302,24 +358,33 @@ public class GUI {
         MouseListener myMouseListener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                startPoint = e.getPoint();
-                System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                if (!rectangleDrawn) {
+                    startPoint = e.getPoint();
+                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                }
+                
             }
         
             @Override
             public void mouseReleased(MouseEvent e) {
-                endPoint = e.getPoint();
-                System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
-                calculateDimensions();
-                drawRectangle();
+                if (!rectangleDrawn) {
+                    endPoint = e.getPoint();
+                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    calculateDimensions();
+                    drawRectangle();
+                }
+              
             }
         };
         if (SelectToProtect == true) {
+            
             this.imageLabel.addMouseListener(myMouseListener);
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被保留。再次点击按钮可取消选取或退出选取模式");
             
         }
         else{
             this.imageLabel.removeMouseListener(myMouseListener);
+            JOptionPane.showMessageDialog(frame,"已退出选取模式。");
             if (rectangleDrawn) {
                 this.imageLabel.setIcon(new ImageIcon(originalImage));               
                 this.dropPanel.repaint();
@@ -330,27 +395,33 @@ public class GUI {
 
     private void switchOfDeleteMode() {        
         MouseListener myMouseListener = new MouseAdapter() {
+            
             @Override
-            public void mousePressed(MouseEvent e) {
-                startPoint = e.getPoint();
-                System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+            public void mousePressed(MouseEvent e) {                
+                if (!rectangleDrawn) {
+                    startPoint = e.getPoint();
+                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                }              
             }
         
             @Override
-            public void mouseReleased(MouseEvent e) {
-                endPoint = e.getPoint();
-                System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
-                calculateDimensions();
-                drawRectangle();
+            public void mouseReleased(MouseEvent e) {        
+                if (!rectangleDrawn) {
+                    endPoint = e.getPoint();
+                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    calculateDimensions();
+                    drawRectangle();
+                }              
             }
         };
         if (SelectToDelete == true) {
             this.imageLabel.addMouseListener(myMouseListener);
-            
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被优先删去。再次点击按钮可取消选取或退出选取模式");
         }
         else{
             this.imageLabel.removeMouseListener(myMouseListener);
-            if (rectangleDrawn) {
+            JOptionPane.showMessageDialog(frame,"已退出选取模式。");
+            if (this.rectangleDrawn) {
                 this.imageLabel.setIcon(new ImageIcon(originalImage));               
                 this.dropPanel.repaint();
                 this.rectangleDrawn = false; // 更新标志变量为矩形未绘
@@ -390,7 +461,7 @@ public class GUI {
             imageLabel.setIcon(new ImageIcon(bufferedImage));
             dropPanel.repaint();
     
-            rectangleDrawn = true; // 更新标志变量为矩形已绘制
+            this.rectangleDrawn = true; // 更新标志变量为矩形已绘制
         }
     }
     
@@ -449,130 +520,3 @@ class ProcessButtonListener implements ActionListener {
 
     
 }
-
-//     JButton expandButton = new JButton("Expand");
-    //     expandButton.addActionListener(e -> {
-    //         // Implement the expand functionality
-    //         JOptionPane.showMessageDialog(frame, "Expand functionality not implemented yet.");
-    //     });
-    //     buttonPanel.add(expandButton);
-    
-    //     JButton protectButton = new JButton("Select To Protect");
-    //     protectButton.addActionListener(e -> {
-    //         // Implement the select to protect functionality
-    //         JOptionPane.showMessageDialog(frame, "Select to protect functionality not implemented yet.");
-    //     });
-    //     buttonPanel.add(protectButton);
-    
-    //     JButton deleteButton = new JButton("Select To Delete");
-    //     deleteButton.addActionListener(e -> {
-    //         // Implement the select to delete functionality
-    //         JOptionPane.showMessageDialog(frame, "Select to delete functionality not implemented yet.");
-    //     });
-    //     buttonPanel.add(deleteButton);
-
-
-    //     JButton loadButton = new JButton("Load");
-    //     loadButton.addActionListener(new ActionListener() {
-    //         @Override
-    //         public void actionPerformed(ActionEvent e) {
-    //             JFileChooser fileChooser = new JFileChooser();
-    //             int result = fileChooser.showOpenDialog(frame);
-    //             if (result == JFileChooser.APPROVE_OPTION) {
-    //                 File selectedFile = fileChooser.getSelectedFile();
-    //                 try {
-    //                     image = ImageIO.read(selectedFile);
-    //                     imageLabel.setIcon(new ImageIcon(image));
-    //                     GUI.this.droppedFiles.add(selectedFile);
-    //                 } catch (IOException ex) {
-    //                     ex.printStackTrace();
-    //                 }
-    //             }
-    //         }
-    //     });
-    //     buttonPanel.add(loadButton);
-
-    //     JButton saveButton = new JButton("Save");
-    //     saveButton.addActionListener(new ActionListener() {
-    //         @Override
-    //         public void actionPerformed(ActionEvent e) {
-    //             if (image != null) {
-    //                 JFileChooser fileChooser = new JFileChooser();
-    //                 int result = fileChooser.showSaveDialog(frame);
-    //                 if (result == JFileChooser.APPROVE_OPTION) {
-    //                     File selectedFile = fileChooser.getSelectedFile();
-    //                     try {
-    //                         ImageIO.write(image, "PNG", selectedFile);
-    //                         JOptionPane.showMessageDialog(frame, "图像保存成功！");
-    //                     } catch (IOException ex) {
-    //                         ex.printStackTrace();
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     });
-    //     buttonPanel.add(saveButton);
-
-    
-    //     // Add components to the frame
-    //     frame.add(dropPanel, BorderLayout.CENTER);
-    //     frame.add(buttonPanel, BorderLayout.SOUTH);
-    
-    //     // Make the frame visible
-    //     frame.setVisible(true);
-
-    // }
-
-    // public static void main(String[] args) {
-    //     SwingUtilities.invokeLater(GUI::new);
-    // }
-
-
-    // public static int getTargetHeight(){
-    //     return targetHeight;
-    // }
-
-    // public static int getTargetWidth(){
-    //     return targetWidth;
-    // }
-
-    // public void displayResultImage(BufferedImage resultImage) {
-    //     dropPanel.removeAll(); // 清除面板上的现有组件
-
-    //     JLabel resultImageLabel = new JLabel(new ImageIcon(resultImage));
-    //     resultImageLabel.setHorizontalAlignment(JLabel.CENTER);
-    //     dropPanel.add(resultImageLabel, BorderLayout.CENTER);
-
-    //     dropPanel.revalidate(); // 重新布局面板
-    //     dropPanel.repaint(); // 重绘面板
-    // }
-// class CarveButtonListener implements ActionListener {
-//     private final List<File> droppedFiles;
-//     private final GUI gui;
-
-//     public CarveButtonListener(List<File> droppedFiles, GUI gui) {
-//         this.droppedFiles = droppedFiles;
-//         this.gui = gui;
-//     }
-
-//     @Override
-//     public void actionPerformed(ActionEvent e) {
-//         if (!droppedFiles.isEmpty()) {
-//             File file = droppedFiles.get(0); // Only process the first dropped file
-
-//             try {
-//                 BufferedImage image = ImageIO.read(file);
-//                 int targetWidth = GUI.getTargetWidth();
-//                 int targetHeight = GUI.getTargetHeight();
-
-//                 SeamCarver seamCarver = new SeamCarver();
-//                 BufferedImage resultImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
-
-//                 gui.displayResultImage(resultImage); // 在GUI中显示结果图像
-
-//             } catch (IOException ex) {
-//                 ex.printStackTrace();
-//             }
-//         }
-//     }
-// }

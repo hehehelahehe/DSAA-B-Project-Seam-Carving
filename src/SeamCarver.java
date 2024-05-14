@@ -25,6 +25,10 @@ public class SeamCarver {
 
         return image;
     }
+
+    public BufferedImage expandImage(BufferedImage image, int targetWidth,int targetHeight){
+        return null;
+    }
 /*
     public static int[][] rotateArray90Degrees(int[][] matrix) {
         int rows = matrix.length;
