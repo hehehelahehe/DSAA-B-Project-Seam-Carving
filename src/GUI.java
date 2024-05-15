@@ -264,14 +264,34 @@ public class GUI {
                 if (targetWidth > image.getWidth() || targetHeight > image.getHeight()){
                     JOptionPane.showMessageDialog(null, "目标宽度或目标高度大于原图像的宽度或高度，请重新输入！", "错误", JOptionPane.ERROR_MESSAGE);
                 }
-                else{this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
+                else{
+                    if (SelectToDelete) {
+                    
+                    }else if (SelectToProtect){
+                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight);
+                        this.originalImage = this.carvedImage;
+
+                        // 更新图像和标签显示
+                        this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                        this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                        this.frame.revalidate();
+                        this.frame.repaint();
+                        this.image = this.carvedImage;
+                        this.rectangleDrawn = false;
+                    }else{
+                        this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
     
-                    // 更新图像和标签显示
-                    this.imageLabel.setIcon(new ImageIcon(carvedImage));
-                    this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
-                    this.frame.revalidate();
-                    this.frame.repaint();
-                    this.image = this.carvedImage;
+                        // 更新图像和标签显示
+                        this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                        this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                        this.frame.revalidate();
+                        this.frame.repaint();
+                        this.image = this.carvedImage;
+
+                    }
+                    
+                    
+                    
         
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
