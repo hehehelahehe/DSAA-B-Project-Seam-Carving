@@ -22,7 +22,7 @@ public class SeamCarver {
         while ( currentWidth > targetWidth) {
             int[][] energyMap = computeEnergyMap(image);
             int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
-            int[] seam = findVerticalEnergySeam(cumulativeEnergyMap);
+            int[] seam = findVerticalSeam(cumulativeEnergyMap);
 
             image = removeVerticalSeam(image, seam);
             currentWidth--;
@@ -48,7 +48,7 @@ public class SeamCarver {
         while ( currentWidth > targetWidth) {
             int[][] energyMap = computeEnergyMap(image);
             int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
-            int[] seam = findVerticalEnergySeam(cumulativeEnergyMap);
+            int[] seam = findVerticalSeam(cumulativeEnergyMap);
 
             image = removeVerticalSeam(image, seam);
             currentWidth--;
@@ -184,11 +184,8 @@ public class SeamCarver {
     private static int[][] computeEnergyMap(BufferedImage image) {
 
         int [][]test;
-        System.out.println(image.getWidth() + " " + image.getHeight());
         test = ImageProcessor.edgeDetect(ImageProcessor.convert2DArrayTO4DArray(image));
         //test = ImageProcessor.edgeDetectGray(ImageProcessor.convert2DArrayTO4DArray(image));
-        System.out.println(test.length);
-        System.out.println(test[0].length);
         return test;
     }
 
@@ -296,7 +293,7 @@ public class SeamCarver {
 
         return minEnergyPath;
     }
-    public int[] findVerticalEnergySeam(int[][] cumulativeVerticalEnergyMap) {
+    public int[] findVerticalSeam(int[][] cumulativeVerticalEnergyMap) {
         int rows = cumulativeVerticalEnergyMap.length;
         int cols = cumulativeVerticalEnergyMap[0].length;
 

@@ -60,7 +60,7 @@
 
 可以看到，图像已经被成功放大。
 
-我们同样地为图片放大添加了报错的功能，如果输入的目标尺寸小雨现有尺寸，在点击Expand按钮后会出现：
+我们同样地为图片放大添加了报错的功能，如果输入的目标尺寸小于现有尺寸，在点击Expand按钮后会出现：
 
 ![alt text](image-7.png)
 
@@ -103,6 +103,102 @@
 ## 三、后端算法介绍
 ### 1）计算梯度图
 ### 2）Seam的选择与删去
+
+seam定义为像素从上到下(或从左到右)的连接路径。对于从上到下的像素，我们将从每一行中选取一个像素。这些连接的路径就组成了一条seam。对一张200x300的图片，
+如果删除了横向的一条seam，就可以得到一张200x299的新图片。同理，竖着删除一条seam，就可以得到199x300的新图片。所以删除一些seam就可以达到缩放图片的效果。
+能量定义了一个像素在图像中的重要程度。为了保留图像中的主要内容，我们删除图像中图像中总能量较低的seam，这样就保留了图像中的主要内容。
+
+我们知道对于从上到下的seam。如果一个像素的横坐标为x，那么上一行组成seam的像素的横坐标只能是x-1,x,x+1。那么我们为了让能量最小，我们能选择上一行这三个像素中能量最小的像素和该像素组成seam，那么通过该点时的总能量为这一点的能量加上上一行像素总能量的最小值。所以可以利用以下递推公式(从上到下)计算代价：
+
+M(i,j)=E(i,j)+min(M(i−1,j−1),M(i−1,j),M(i−1,j+1))
+
+参考以下图示：
+
+![alt text](image-16.png)
+
+![alt text](image-17.png)
+
+由于计算的最后一行时，为经过最后一行像素的seam的最小总能量。那么我们只要挑选总能量最小的像素，并进行回溯，找到这个最小能量对应的seam即可。计算代价的函数如下：
+
+
+    private static int[][] computeHorizontalCumulativeEnergyMap(int[][] energyMap) {
+        int rows = energyMap.length;
+        int cols = energyMap[0].length;
+        int[][] cumulativeEnergyMap = new int[rows][cols];
+        // 复制第一行
+        System.arraycopy(energyMap[0], 0, cumulativeEnergyMap[0], 0, cols);
+
+        // 计算每个位置的累积能量值
+        for (int i = 1; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                int minEnergy = Integer.MAX_VALUE;
+
+                // 限制索引范围，避免数组越界
+                int prevRow = i - 1;
+                int prevCol = Math.max(j - 1, 0);
+                int nextCol = Math.min(j + 1, cols - 1);
+
+                // 查找上一行相邻列的最小累积能量值
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][prevCol]);
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][j]);
+                minEnergy = Math.min(minEnergy, cumulativeEnergyMap[prevRow][nextCol]);
+
+                // 计算当前位置的累积能量值
+                cumulativeEnergyMap[i][j] = energyMap[i][j] + minEnergy;
+            }
+        }
+
+        return cumulativeEnergyMap;
+    }
+
+回溯路径的函数如下：
+
+    private static int[] findHorizontalSeam(int[][] cumulativeEnergyMap) {
+        int rows = cumulativeEnergyMap.length;
+        int cols = cumulativeEnergyMap[0].length;
+
+        // 找到最后一行中累积能量最小的列作为起点
+        int minEnergyCol = 0;
+        int minEnergy = cumulativeEnergyMap[rows - 1][0];
+        for (int j = 1; j < cols; j++) {
+            if (cumulativeEnergyMap[rows - 1][j] < minEnergy) {
+                minEnergy = cumulativeEnergyMap[rows - 1][j];
+                minEnergyCol = j;
+            }
+        }
+
+        int[] minEnergyPath = new int[rows];
+        minEnergyPath[rows - 1] = minEnergyCol;
+
+        // 从倒数第二行开始，逐行向上寻找累积能量最小的邻居列
+        for (int i = rows - 2; i >= 0; i--) {
+            int currentCol = minEnergyPath[i + 1];
+            int prevCol = currentCol;
+            int nextCol = currentCol;
+
+            // 限制索引范围，避免数组越界
+            if (currentCol > 0) {
+                prevCol = currentCol - 1;
+            }
+            if (currentCol < cols - 1) {
+                nextCol = currentCol + 1;
+            }
+
+            // 选择累积能量最小的邻居列
+            if (cumulativeEnergyMap[i][prevCol] <= cumulativeEnergyMap[i][currentCol]
+                    && cumulativeEnergyMap[i][prevCol] <= cumulativeEnergyMap[i][nextCol]) {
+                minEnergyPath[i] = prevCol;
+            } else if (cumulativeEnergyMap[i][nextCol] <= cumulativeEnergyMap[i][currentCol]
+                    && cumulativeEnergyMap[i][nextCol] <= cumulativeEnergyMap[i][prevCol]) {
+                minEnergyPath[i] = nextCol;
+            } else {
+                minEnergyPath[i] = currentCol;
+            }
+        }
+
+        return minEnergyPath;
+    }
+最后在图片中移除这条seam即可完成水平的缩放。竖直方向的缩放同理。
 ### 3）放大图片
 
 
