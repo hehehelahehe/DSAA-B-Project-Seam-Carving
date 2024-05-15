@@ -46,7 +46,7 @@ public class SeamCarver {
 
         for (int i = startX; i < endX; i++) {
             for (int j = startY; j < endY; j++) {
-                energyMap[i][j] = Integer.MIN_VALUE;
+                energyMap[i][j] = -1000;
             }
         }
 

@@ -266,7 +266,6 @@ public class GUI {
                 }
                 else{
                     if (SelectToDelete) {
-
                         this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint);
                         this.originalImage = this.carvedImage;
 
@@ -300,10 +299,7 @@ public class GUI {
                         this.image = this.carvedImage;
 
                     }
-                    
-                    
-                    
-        
+                            
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
     
