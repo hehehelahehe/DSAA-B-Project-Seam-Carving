@@ -99,7 +99,19 @@ public class GUI {
         // Create JPanel for the buttons
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton processButton = new JButton("Process");
-        processButton.addActionListener(new ProcessButtonListener(this));
+        processButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int targetWidth = Integer.parseInt(widthTextField.getText());
+                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    performImageProcessing();
+                } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
+                    JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            }
+        });
         buttonPanel.add(processButton);
 
         JButton carveButton = new JButton("Carve");
@@ -214,10 +226,37 @@ public class GUI {
         }
     }
 
+    private void performImageProcessing(){
+        if (droppedFile != null) {
+            // try {
+            //     this.image = ImageIO.read(droppedFile);
+                int targetWidth = Integer.parseInt(widthTextField.getText());
+                int targetHeight = Integer.parseInt(heightTextField.getText());
+                
+                this.carvedImage = seamCarver.processImage(image, targetWidth, targetHeight);
+    
+                    // 更新图像和标签显示
+                this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                this.frame.revalidate();
+                this.frame.repaint();
+                this.image = this.carvedImage;
+        
+                JOptionPane.showMessageDialog(null, "图像处理成功！");
+                
+    
+                
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            // }
+        }
+
+    }
+
     private void performImageCarving() {
         if (droppedFile != null) {
-            try {
-                this.image = ImageIO.read(droppedFile);
+            // try {
+            //     this.image = ImageIO.read(droppedFile);
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth > image.getWidth() || targetHeight > image.getHeight()){
@@ -236,16 +275,16 @@ public class GUI {
                 }
     
                 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            // }
         }
     }
 
     private void performImageExpanding(){
         if (droppedFile != null) {
-            try {
-                this.image = ImageIO.read(droppedFile);
+            // try {
+            //     this.image = ImageIO.read(droppedFile);
                 targetWidth = Integer.parseInt(widthTextField.getText());
                 targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth < image.getWidth() || targetHeight < image.getHeight()){
@@ -264,9 +303,9 @@ public class GUI {
                 }
     
                 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            //}
         }
     }
 

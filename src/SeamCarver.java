@@ -28,6 +28,84 @@ public class SeamCarver {
             currentWidth--;
         }
 
+        
+
+        return image;
+    }
+
+    public BufferedImage processImage(BufferedImage image, int targetWidth, int targetHeight) {
+        int currentWidth = image.getWidth();
+        int currentHeight = image.getHeight();
+
+        while ( currentHeight > targetHeight) {
+            int[][] energyMap = computeEnergyMap(image);
+            int[][] cumulativeEnergyMap = computeHorizontalCumulativeEnergyMap(energyMap);
+            int[] seam = findHorizontalSeam(cumulativeEnergyMap);
+
+            image = removeHorizontalSeam(image, seam);
+            currentHeight--;
+        }
+        while ( currentWidth > targetWidth) {
+            int[][] energyMap = computeEnergyMap(image);
+            int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
+            int[] seam = findVerticalEnergySeam(cumulativeEnergyMap);
+
+            image = removeVerticalSeam(image, seam);
+            currentWidth--;
+        }
+
+        int numSeamsY = targetHeight - currentHeight;//计算纵向扩展需要的seam数量
+        int numSeamsX = targetWidth - currentWidth;//计算横向扩展需要的seam数量
+        int[][] energyMap = computeEnergyMap(image);
+
+        int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
+        List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
+        //displayPaths(seamsY,image);
+
+        for (int i = 0; i < seamsX.size(); i++) {
+            int[] seam = seamsX.get(i);
+            BufferedImage temp = new BufferedImage(currentWidth, currentHeight + 1, BufferedImage.TYPE_INT_RGB);
+            for (int j = 0; j < currentWidth; j++) {
+                int a = seam[j];
+                for (int k = 0; k < currentHeight + 1; k++) {
+                    if (k < a) {
+                        temp.setRGB(j, k, image.getRGB(j, k));
+                    } else if (k == a) {
+                        temp.setRGB(j, k, image.getRGB(j, k));
+                    } else {
+                        temp.setRGB(j, k, image.getRGB(j, k - 1));
+                    }
+                }
+            }
+            image = temp;
+            currentHeight++;
+        }
+
+        energyMap = computeEnergyMap(image);//重新计算energyMap
+        int[][] cumulativeEnergyMapY = computeCumulativeVerticalEnergyMap(energyMap);//计算横向扩展所需的能量累积图
+        List<int[]> seamsY = findVerticalSeams(cumulativeEnergyMapY, numSeamsX);
+
+        for (int i = 0; i < seamsY.size(); i++) {
+            int[] seam = seamsY.get(i);
+            BufferedImage temp = new BufferedImage(currentWidth + 1, currentHeight, BufferedImage.TYPE_INT_RGB);
+            for (int j = 0; j < currentHeight; j++) {
+                int a = seam[j];
+                for (int k = 0; k < currentWidth + 1; k++) {
+                    if (k < a) {
+                        temp.setRGB(k, j, image.getRGB(k, j));
+                    } else if (k == a) {
+                        temp.setRGB(k, j, image.getRGB(k, j));
+                    } else {
+                        temp.setRGB(k, j, image.getRGB(k - 1, j));
+                    }
+                }
+            }
+            image = temp;
+            currentWidth++;
+        }
+
+        
+
         return image;
     }
 
