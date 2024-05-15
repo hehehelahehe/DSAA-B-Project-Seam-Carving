@@ -428,7 +428,7 @@ public class GUI {
             public void mousePressed(MouseEvent e) {
                 if (!rectangleDrawn) {
                     startPoint = e.getPoint();
-                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                    
                 }
                 
             }
@@ -437,7 +437,7 @@ public class GUI {
             public void mouseReleased(MouseEvent e) {
                 if (!rectangleDrawn) {
                     endPoint = e.getPoint();
-                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    
                     calculateDimensions();
                     drawRectangle();
                 }
@@ -468,7 +468,7 @@ public class GUI {
             public void mousePressed(MouseEvent e) {                
                 if (!rectangleDrawn) {
                     startPoint = e.getPoint();
-                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                    
                 }              
             }
         
@@ -476,7 +476,7 @@ public class GUI {
             public void mouseReleased(MouseEvent e) {        
                 if (!rectangleDrawn) {
                     endPoint = e.getPoint();
-                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    
                     calculateDimensions();
                     drawRectangle();
                 }              
