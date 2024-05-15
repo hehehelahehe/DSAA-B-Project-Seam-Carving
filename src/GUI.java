@@ -266,9 +266,20 @@ public class GUI {
                 }
                 else{
                     if (SelectToDelete) {
+
+                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint);
+                        this.originalImage = this.carvedImage;
+
+                        // 更新图像和标签显示
+                        this.imageLabel.setIcon(new ImageIcon(carvedImage));
+                        this.sizeLabel.setText("Image Size: " + carvedImage.getWidth() + " x " + carvedImage.getHeight());
+                        this.frame.revalidate();
+                        this.frame.repaint();
+                        this.image = this.carvedImage;
+                        this.rectangleDrawn = false;
                     
                     }else if (SelectToProtect){
-                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight);
+                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint);
                         this.originalImage = this.carvedImage;
 
                         // 更新图像和标签显示

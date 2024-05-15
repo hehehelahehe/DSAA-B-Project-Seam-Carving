@@ -68,7 +68,7 @@ public class ImageProcessor {
         double[][] kernelX = sobelX;
         double[][] kernelY = sobelY;
         //double[][] kernelX = {{0,0,0},{1,0,-1},{0,0,0}};
-        //double[][] kernelY = {{0,1,0},{0,0,0},{0,1,0}};
+        //double[][] kernelY = {{0,-1,0},{0,0,0},{0,1,0}};
         int width = img[0].length;
         int height = img[0][0].length;
         int size = 3;
@@ -220,7 +220,7 @@ public class ImageProcessor {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int gray = grayScaleArray[x][y];
-                gray = Math.min(255,gray);
+                //gray = Math.min(255,gray);
                 int color = (gray << 16) | (gray << 8) | gray;
                 image.setRGB(x, y, color);
             }
@@ -289,6 +289,21 @@ public class ImageProcessor {
         frame.pack();
         frame.setLocationRelativeTo(null); // Center the window
         frame.setVisible(true);
+    }
+
+    public static int[][] convertTo2DArray(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[][] pixelArray = new int[width][height];
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int grayValue = image.getRGB(x, y) & 0xFF;
+                pixelArray[x][y] = grayValue;
+            }
+        }
+
+        return pixelArray;
     }
 
     public static void writeImageFile(BufferedImage bi) throws IOException {

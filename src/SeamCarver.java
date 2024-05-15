@@ -10,21 +10,22 @@ public class SeamCarver {
     public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight) {
         int currentWidth = image.getWidth();
         int currentHeight = image.getHeight();
+        int[][] energyMap = computeEnergyMap(image);
 
         while ( currentHeight > targetHeight) {
-            int[][] energyMap = computeEnergyMap(image);
             int[][] cumulativeEnergyMap = computeHorizontalCumulativeEnergyMap(energyMap);
             int[] seam = findHorizontalSeam(cumulativeEnergyMap);
 
             image = removeHorizontalSeam(image, seam);
+            energyMap = removeHorizontalSeam(energyMap,seam);
             currentHeight--;
         }
         while ( currentWidth > targetWidth) {
-            int[][] energyMap = computeEnergyMap(image);
             int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
             int[] seam = findVerticalSeam(cumulativeEnergyMap);
 
             image = removeVerticalSeam(image, seam);
+            energyMap = removeVerticalSeam(energyMap,seam);
             currentWidth--;
         }
 
@@ -33,6 +34,41 @@ public class SeamCarver {
         return image;
     }
 
+    public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight,Point start, Point end){
+        int startX = start.x;
+        int startY = start.y;
+        int endX = end.x;
+        int endY = end.y;
+
+        int currentWidth = image.getWidth();
+        int currentHeight = image.getHeight();
+        int[][] energyMap = computeEnergyMap(image);
+
+        for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
+                energyMap[i][j] = Integer.MIN_VALUE;
+            }
+        }
+
+        while ( currentHeight > targetHeight) {
+            int[][] cumulativeEnergyMap = computeHorizontalCumulativeEnergyMap(energyMap);
+            int[] seam = findHorizontalSeam(cumulativeEnergyMap);
+
+            image = removeHorizontalSeam(image, seam);
+            energyMap = removeHorizontalSeam(energyMap,seam);
+            currentHeight--;
+        }
+        while ( currentWidth > targetWidth) {
+            int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
+            int[] seam = findVerticalSeam(cumulativeEnergyMap);
+
+            image = removeVerticalSeam(image, seam);
+            energyMap = removeVerticalSeam(energyMap,seam);
+            currentWidth--;
+        }
+
+        return image;
+    }
     public BufferedImage processImage(BufferedImage image, int targetWidth, int targetHeight) {
         int currentWidth = image.getWidth();
         int currentHeight = image.getHeight();
@@ -117,9 +153,18 @@ public class SeamCarver {
         int numSeamsX = targetWidth - Width;//计算横向扩展需要的seam数量
         int[][] energyMap = computeEnergyMap(image);
 
+        BufferedImage energy =  ImageProcessor.createGrayScaleImage(energyMap);
+        int[][] testEnergy = ImageProcessor.convertTo2DArray(energy);
+        for (int x = 0; x < testEnergy.length; x++) {
+            for (int y = 0; y < testEnergy[0].length; y++) {
+                System.out.print(testEnergy[x][y] + " ");
+            }
+            System.out.println();
+        }
+
         int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
         List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
-        //displayPaths(seamsY,image);
+        displayPaths(seamsX,image);
 
         for (int i = 0; i < seamsX.size(); i++) {
             int[] seam = seamsX.get(i);
@@ -252,9 +297,16 @@ public class SeamCarver {
         int rows = cumulativeEnergyMap.length;
         int cols = cumulativeEnergyMap[0].length;
 
+        Integer[] endCols = new Integer[cols];
+        for (int j = 0; j < cols; j++) {
+            endCols[j] = j;
+        }
+        Arrays.sort(endCols, Comparator.comparingInt(j -> cumulativeEnergyMap[rows - 1][j]));
 
-        int minEnergyCol = 0;
+        int minEnergyCol = endCols[0];
+        /*
         int minEnergy = cumulativeEnergyMap[rows - 1][0];
+
         for (int j = 1; j < cols; j++) {
             if (cumulativeEnergyMap[rows - 1][j] < minEnergy) {
                 minEnergy = cumulativeEnergyMap[rows - 1][j];
@@ -262,6 +314,7 @@ public class SeamCarver {
             }
         }
 
+         */
         int[] minEnergyPath = new int[rows];
         minEnergyPath[rows - 1] = minEnergyCol;
 
@@ -339,6 +392,7 @@ public class SeamCarver {
         return minEnergyPath;
     }
 
+
     private static BufferedImage removeHorizontalSeam(BufferedImage image, int[] seam) {
         int width = image.getWidth() ;
         int height = image.getHeight() - 1;
@@ -358,6 +412,26 @@ public class SeamCarver {
         }
 
         return newImage;
+    }
+    public static int[][] removeHorizontalSeam(int[][] energyMap, int[] seam) {
+        int width = energyMap.length;
+        int height = energyMap[0].length - 1;
+
+        int[][] newEnergyMap = new int[width][height];
+
+        for (int y = 0; y < width; y++) {
+            int seamX = seam[y];
+
+            for (int x = 0; x < height; x++) {
+                if (x < seamX) {
+                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - x];
+                } else {
+                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - 1 - x];
+                }
+            }
+        }
+
+        return newEnergyMap;
     }
     private static BufferedImage removeVerticalSeam(BufferedImage image, int[] seam) {
         int width = image.getWidth() - 1;
@@ -380,6 +454,25 @@ public class SeamCarver {
         return newImage;
     }
 
+    public static int[][] removeVerticalSeam(int[][] energyMap, int[] seam) {
+        int width = energyMap.length - 1;
+        int height = energyMap[0].length;
+
+        int[][] newEnergyMap = new int[width][height];
+
+        for (int x = 0; x < height; x++) {
+            int seamY = seam[x];
+
+            for (int y = 0; y < width; y++) {
+                if (y < seamY) {
+                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - 1 - x];
+                } else {
+                    newEnergyMap[y][height - 1 - x] = energyMap[y + 1][height - x - 1];
+                }
+            }
+        }
+        return newEnergyMap;
+    }
     public static List<int[]> findHorizontalSeams(int[][] cumulativeEnergyMap, int numSeams) {
         int rows = cumulativeEnergyMap.length;
         int cols = cumulativeEnergyMap[0].length;
@@ -523,8 +616,8 @@ public class SeamCarver {
     public static void displayPaths(List<int[]> paths, BufferedImage image){
         for (int i = 0; i < paths.size(); i++) {
             int[] temp = paths.get(i);
-            for (int j = 0; j < image.getHeight(); j++) {
-                image.setRGB(temp[j],j, Color.red.getRGB());
+            for (int j = 0; j < image.getWidth(); j++) {
+                image.setRGB(j,temp[j], Color.red.getRGB());
             }
         }
         ImageProcessor.displayImage(image);
