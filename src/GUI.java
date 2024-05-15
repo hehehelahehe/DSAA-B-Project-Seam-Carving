@@ -266,7 +266,7 @@ public class GUI {
                 }
                 else{
                     if (SelectToDelete) {
-                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint);
+                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,false);
                         this.originalImage = this.carvedImage;
 
                         // 更新图像和标签显示
@@ -278,7 +278,7 @@ public class GUI {
                         this.rectangleDrawn = false;
                     
                     }else if (SelectToProtect){
-                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint);
+                        this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,true);
                         this.originalImage = this.carvedImage;
 
                         // 更新图像和标签显示

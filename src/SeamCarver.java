@@ -34,7 +34,7 @@ public class SeamCarver {
         return image;
     }
 
-    public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight,Point start, Point end){
+    public BufferedImage shrinkImage(BufferedImage image, int targetWidth, int targetHeight,Point start, Point end,Boolean isProtect){
         int startX = start.x;
         int startY = start.y;
         int endX = end.x;
@@ -46,7 +46,9 @@ public class SeamCarver {
 
         for (int i = startX; i < endX; i++) {
             for (int j = startY; j < endY; j++) {
-                energyMap[i][j] = -1000;
+                if(isProtect){
+                    energyMap[i][j] = 100000;
+                }else energyMap[i][j] = -100000;
             }
         }
 
@@ -152,16 +154,6 @@ public class SeamCarver {
         int numSeamsY = targetHeight - Height;//计算纵向扩展需要的seam数量
         int numSeamsX = targetWidth - Width;//计算横向扩展需要的seam数量
         int[][] energyMap = computeEnergyMap(image);
-
-        BufferedImage energy =  ImageProcessor.createGrayScaleImage(energyMap);
-        int[][] testEnergy = ImageProcessor.convertTo2DArray(energy);
-        for (int x = 0; x < testEnergy.length; x++) {
-            for (int y = 0; y < testEnergy[0].length; y++) {
-                System.out.print(testEnergy[x][y] + " ");
-            }
-            System.out.println();
-        }
-
         int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
         List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
         displayPaths(seamsX,image);
