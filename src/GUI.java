@@ -105,8 +105,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    
                     performImageProcessing();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -121,8 +120,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                 
                     performImageCarving();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -137,8 +135,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    
                     performImageExpanding();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -230,8 +227,7 @@ public class GUI {
 
     private void performImageProcessing(){
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
+           
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
                 
@@ -246,19 +242,14 @@ public class GUI {
         
                 JOptionPane.showMessageDialog(null, "图像处理成功！");
                 
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            // }
+   
         }
 
     }
 
     private void performImageCarving() {
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
+            
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth > image.getWidth() || targetHeight > image.getHeight()){
@@ -266,6 +257,9 @@ public class GUI {
                 }
                 else{
                     if (SelectToDelete) {
+                        if (rectangleDrawn == false) {
+                            JOptionPane.showMessageDialog(null, "请先选取要删除的区域！或先退出优先删除模式再进行裁剪", "错误", JOptionPane.ERROR_MESSAGE);
+                        }
                         this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,false);
                         this.originalImage = this.carvedImage;
 
@@ -278,6 +272,10 @@ public class GUI {
                         this.rectangleDrawn = false;
                     
                     }else if (SelectToProtect){
+                        if (rectangleDrawn == false) {
+                            JOptionPane.showMessageDialog(null, "请先选取要保护的区域！或先退出保护模式再进行裁剪", "错误", JOptionPane.ERROR_MESSAGE);
+                            
+                        }
                         this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,true);
                         this.originalImage = this.carvedImage;
 
@@ -302,18 +300,11 @@ public class GUI {
                             
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            // }
         }
     }
 
     private void performImageExpanding(){
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
                 targetWidth = Integer.parseInt(widthTextField.getText());
                 targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth < image.getWidth() || targetHeight < image.getHeight()){
@@ -330,11 +321,6 @@ public class GUI {
         
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            //}
         }
     }
 

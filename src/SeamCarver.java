@@ -75,22 +75,7 @@ public class SeamCarver {
         int currentWidth = image.getWidth();
         int currentHeight = image.getHeight();
 
-        while ( currentHeight > targetHeight) {
-            int[][] energyMap = computeEnergyMap(image);
-            int[][] cumulativeEnergyMap = computeHorizontalCumulativeEnergyMap(energyMap);
-            int[] seam = findHorizontalSeam(cumulativeEnergyMap);
-
-            image = removeHorizontalSeam(image, seam);
-            currentHeight--;
-        }
-        while ( currentWidth > targetWidth) {
-            int[][] energyMap = computeEnergyMap(image);
-            int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
-            int[] seam = findVerticalSeam(cumulativeEnergyMap);
-
-            image = removeVerticalSeam(image, seam);
-            currentWidth--;
-        }
+        
 
         int numSeamsY = targetHeight - currentHeight;//计算纵向扩展需要的seam数量
         int numSeamsX = targetWidth - currentWidth;//计算横向扩展需要的seam数量
@@ -142,7 +127,22 @@ public class SeamCarver {
             currentWidth++;
         }
 
-        
+        while ( currentHeight > targetHeight) {
+            energyMap = computeEnergyMap(image);
+            int[][] cumulativeEnergyMap = computeHorizontalCumulativeEnergyMap(energyMap);
+            int[] seam = findHorizontalSeam(cumulativeEnergyMap);
+
+            image = removeHorizontalSeam(image, seam);
+            currentHeight--;
+        }
+        while ( currentWidth > targetWidth) {
+            energyMap = computeEnergyMap(image);
+            int[][] cumulativeEnergyMap = computeCumulativeVerticalEnergyMap(energyMap);
+            int[] seam = findVerticalSeam(cumulativeEnergyMap);
+
+            image = removeVerticalSeam(image, seam);
+            currentWidth--;
+        }
 
         return image;
     }
