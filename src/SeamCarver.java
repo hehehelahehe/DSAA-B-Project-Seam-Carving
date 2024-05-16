@@ -156,7 +156,7 @@ public class SeamCarver {
         int[][] energyMap = computeEnergyMap(image);
         int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
         List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
-        displayPaths(seamsX,image);
+        //displayPaths(seamsX,image);
 
         for (int i = 0; i < seamsX.size(); i++) {
             int[] seam = seamsX.get(i);
