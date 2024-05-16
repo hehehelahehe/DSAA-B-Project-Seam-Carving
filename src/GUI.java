@@ -38,8 +38,8 @@ public class GUI {
     private JPanel hintPanel;//用于显示程序使用方法的面板
     private JLabel hintLabel;//用于显示程序使用方法的标签
     private SeamCarver seamCarver = new SeamCarver();
-    private static boolean SelectToProtect = false;
-    private static boolean SelectToDelete = false;
+    private boolean SelectToProtect = false;
+    private boolean SelectToDelete = false;
     private static Point startPoint;
     private static Point endPoint;
     private int selectedWidth;
@@ -176,6 +176,13 @@ public class GUI {
                 if (SelectToProtect == false) {
                     SelectToProtect = true;
                     SelectToDelete = false;
+                    if (rectangleDrawn) {
+                        image = originalImage;
+                        imageLabel.setIcon(new ImageIcon(image));
+                        sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+                        dropPanel.repaint();
+                        rectangleDrawn = false;
+                    }
                 }
                 else{
                     SelectToProtect = false;                    
@@ -192,6 +199,13 @@ public class GUI {
                 if (SelectToDelete == false) {
                     SelectToDelete = true;
                     SelectToProtect = false;
+                    if (rectangleDrawn) {
+                        image = originalImage;
+                        imageLabel.setIcon(new ImageIcon(image));
+                        sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+                        dropPanel.repaint();
+                        rectangleDrawn = false;
+                    }
                 }
                 else{
                     SelectToDelete = false;                    
@@ -433,7 +447,7 @@ public class GUI {
         if (SelectToProtect == true) {
             
             this.imageLabel.addMouseListener(myMouseListener);
-            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被保留。再次点击按钮可取消选取或退出选取模式");
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片区域将在Carve操作中被保留。再次点击按钮可取消选取或退出选取模式");
             
         }
         else{
@@ -470,7 +484,7 @@ public class GUI {
         };
         if (SelectToDelete == true) {
             this.imageLabel.addMouseListener(myMouseListener);
-            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被优先删去。再次点击按钮可取消选取或退出选取模式");
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片区域将在Carve操作中被优先删去。再次点击按钮可取消选取或退出选取模式");
         }
         else{
             this.imageLabel.removeMouseListener(myMouseListener);
@@ -527,13 +541,6 @@ public class GUI {
         return endPoint;
     }
 
-    public static boolean getSelectToProtect(){
-        return SelectToProtect;
-    }
-
-    public static boolean getSelectToDelete(){
-        return SelectToDelete;
-    }
     
 }
 
