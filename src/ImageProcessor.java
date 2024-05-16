@@ -44,8 +44,7 @@ public class ImageProcessor {
         // 获取图片宽度和高度
         int width = bf.getWidth();   // 图片宽度
         int height = bf.getHeight();  //图片高度
-        System.out.println(width);
-        System.out.println(height);
+        
         int channel = 3; // 3个通道
 
         int[] data = new int[width*height];

@@ -38,8 +38,8 @@ public class GUI {
     private JPanel hintPanel;//用于显示程序使用方法的面板
     private JLabel hintLabel;//用于显示程序使用方法的标签
     private SeamCarver seamCarver = new SeamCarver();
-    private static boolean SelectToProtect = false;
-    private static boolean SelectToDelete = false;
+    private boolean SelectToProtect = false;
+    private boolean SelectToDelete = false;
     private static Point startPoint;
     private static Point endPoint;
     private int selectedWidth;
@@ -105,8 +105,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    
                     performImageProcessing();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -121,8 +120,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                 
                     performImageCarving();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -137,8 +135,7 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    int targetWidth = Integer.parseInt(widthTextField.getText());
-                    int targetHeight = Integer.parseInt(heightTextField.getText());
+                    
                     performImageExpanding();
                 } catch (NumberFormatException ex) { // Rename the parameter to 'ex'
                     JOptionPane.showMessageDialog(null, "请输入有效的整数作为目标宽度和目标高度！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -179,6 +176,13 @@ public class GUI {
                 if (SelectToProtect == false) {
                     SelectToProtect = true;
                     SelectToDelete = false;
+                    if (rectangleDrawn) {
+                        image = originalImage;
+                        imageLabel.setIcon(new ImageIcon(image));
+                        sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+                        dropPanel.repaint();
+                        rectangleDrawn = false;
+                    }
                 }
                 else{
                     SelectToProtect = false;                    
@@ -195,6 +199,13 @@ public class GUI {
                 if (SelectToDelete == false) {
                     SelectToDelete = true;
                     SelectToProtect = false;
+                    if (rectangleDrawn) {
+                        image = originalImage;
+                        imageLabel.setIcon(new ImageIcon(image));
+                        sizeLabel.setText("Image Size: " + image.getWidth() + " x " + image.getHeight());
+                        dropPanel.repaint();
+                        rectangleDrawn = false;
+                    }
                 }
                 else{
                     SelectToDelete = false;                    
@@ -230,8 +241,7 @@ public class GUI {
 
     private void performImageProcessing(){
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
+           
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
                 
@@ -246,19 +256,14 @@ public class GUI {
         
                 JOptionPane.showMessageDialog(null, "图像处理成功！");
                 
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            // }
+   
         }
 
     }
 
     private void performImageCarving() {
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
+            
                 int targetWidth = Integer.parseInt(widthTextField.getText());
                 int targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth > image.getWidth() || targetHeight > image.getHeight()){
@@ -266,6 +271,9 @@ public class GUI {
                 }
                 else{
                     if (SelectToDelete) {
+                        if (rectangleDrawn == false) {
+                            JOptionPane.showMessageDialog(null, "请先选取要删除的区域！或先退出优先删除模式再进行裁剪", "错误", JOptionPane.ERROR_MESSAGE);
+                        }
                         this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,false);
                         this.originalImage = this.carvedImage;
 
@@ -278,6 +286,10 @@ public class GUI {
                         this.rectangleDrawn = false;
                     
                     }else if (SelectToProtect){
+                        if (rectangleDrawn == false) {
+                            JOptionPane.showMessageDialog(null, "请先选取要保护的区域！或先退出保护模式再进行裁剪", "错误", JOptionPane.ERROR_MESSAGE);
+                            
+                        }
                         this.carvedImage = seamCarver.shrinkImage(originalImage, targetWidth, targetHeight,startPoint,endPoint,true);
                         this.originalImage = this.carvedImage;
 
@@ -302,18 +314,11 @@ public class GUI {
                             
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            // }
         }
     }
 
     private void performImageExpanding(){
         if (droppedFile != null) {
-            // try {
-            //     this.image = ImageIO.read(droppedFile);
                 targetWidth = Integer.parseInt(widthTextField.getText());
                 targetHeight = Integer.parseInt(heightTextField.getText());
                 if (targetWidth < image.getWidth() || targetHeight < image.getHeight()){
@@ -330,11 +335,6 @@ public class GUI {
         
                     JOptionPane.showMessageDialog(null, "图像处理成功！");
                 }
-    
-                
-            // } catch (IOException e) {
-            //     e.printStackTrace();
-            //}
         }
     }
 
@@ -428,7 +428,7 @@ public class GUI {
             public void mousePressed(MouseEvent e) {
                 if (!rectangleDrawn) {
                     startPoint = e.getPoint();
-                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                    
                 }
                 
             }
@@ -437,7 +437,7 @@ public class GUI {
             public void mouseReleased(MouseEvent e) {
                 if (!rectangleDrawn) {
                     endPoint = e.getPoint();
-                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    
                     calculateDimensions();
                     drawRectangle();
                 }
@@ -447,7 +447,7 @@ public class GUI {
         if (SelectToProtect == true) {
             
             this.imageLabel.addMouseListener(myMouseListener);
-            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被保留。再次点击按钮可取消选取或退出选取模式");
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片区域将在Carve操作中被保留。再次点击按钮可取消选取或退出选取模式");
             
         }
         else{
@@ -468,7 +468,7 @@ public class GUI {
             public void mousePressed(MouseEvent e) {                
                 if (!rectangleDrawn) {
                     startPoint = e.getPoint();
-                    System.out.println("startPoint: " + startPoint.getX() + ", " + startPoint.getY());
+                    
                 }              
             }
         
@@ -476,7 +476,7 @@ public class GUI {
             public void mouseReleased(MouseEvent e) {        
                 if (!rectangleDrawn) {
                     endPoint = e.getPoint();
-                    System.out.println("endPoint: " + endPoint.getX() + ", " + endPoint.getY());
+                    
                     calculateDimensions();
                     drawRectangle();
                 }              
@@ -484,7 +484,7 @@ public class GUI {
         };
         if (SelectToDelete == true) {
             this.imageLabel.addMouseListener(myMouseListener);
-            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片将在Carve操作中被优先删去。再次点击按钮可取消选取或退出选取模式");
+            JOptionPane.showMessageDialog(frame, "已进入选取模式！您所选的图片区域将在Carve操作中被优先删去。再次点击按钮可取消选取或退出选取模式");
         }
         else{
             this.imageLabel.removeMouseListener(myMouseListener);
@@ -541,13 +541,6 @@ public class GUI {
         return endPoint;
     }
 
-    public static boolean getSelectToProtect(){
-        return SelectToProtect;
-    }
-
-    public static boolean getSelectToDelete(){
-        return SelectToDelete;
-    }
     
 }
 
