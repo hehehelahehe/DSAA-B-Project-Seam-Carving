@@ -48,7 +48,7 @@ public class SeamCarver {
             for (int j = startY; j < endY; j++) {
                 if(isProtect){
                     energyMap[i][j] = 100000;
-                }else energyMap[i][j] = -100000;
+                }else energyMap[i][j] = -100000000;
             }
         }
 

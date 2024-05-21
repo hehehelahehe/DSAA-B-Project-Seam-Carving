@@ -65,7 +65,7 @@ public class GUI {
 
         //创建用于显示程序使用方法的窗口和标签
         this.hintPanel = new JPanel();
-        this.hintLabel = new JLabel("<html><font size = 5>使用方法：<br>点击Process按钮处理图片<br>点击Carve按钮裁剪图片<br>点击Load按钮加载图片<br>点击Save按钮保存图片<br>点击Select To Protect按钮选择保护区域<br>点击Select To Delete按钮选择优先删除区域</html>");
+        this.hintLabel = new JLabel("<html><font size = 5>使用方法：<br>Process：处理图片<br>Carve：裁剪图片<br>Load：载入图片<br>Save：保存图片<br>Select To Protect：选择保护区域<br>Select To Delete：选择优先删除区域</html>");
         this.hintPanel.add(hintLabel);
 
         //创建用于输入目标长宽的窗口
