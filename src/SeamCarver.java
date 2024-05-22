@@ -29,7 +29,55 @@ public class SeamCarver {
             currentWidth--;
         }
 
-        
+        return image;
+    }
+
+    //一次删去多条最小能量路径
+    public BufferedImage shrinkImageMultiple(BufferedImage image, int targetWidth, int targetHeight) {
+        int currentWidth = image.getWidth();
+        int currentHeight = image.getHeight();
+        int[][] energyMap = computeEnergyMap(image);
+        int numSeamsY ,numSeamsX ;
+        numSeamsY = numSeamsX = 3;
+
+        while ( currentHeight > targetHeight) {
+            int[][] cumulativeEnergyMapX = computeHorizontalCumulativeEnergyMap(energyMap);//计算纵向扩展所需的能量累积图
+
+            if(currentHeight - targetHeight >= numSeamsY){
+                List<int[]> seamsX = findHorizontalSeams(cumulativeEnergyMapX, numSeamsY);
+                for (int i = 0; i < seamsX.size(); i++) {
+                    int[] temp = seamsX.get(i);
+                    image = removeHorizontalSeam(image, temp);
+                    energyMap = removeHorizontalSeam(energyMap,temp);
+                    currentHeight--;
+                }
+            }
+            else {
+                int[] seam = findHorizontalSeam(cumulativeEnergyMapX);
+                image = removeHorizontalSeam(image, seam);
+                energyMap = removeHorizontalSeam(energyMap,seam);
+                currentHeight--;
+            }
+        }
+        while ( currentWidth > targetWidth) {
+            int[][] cumulativeEnergyMapY = computeCumulativeVerticalEnergyMap(energyMap);//计算横向扩展所需的能量累积图
+
+            if(currentWidth - targetHeight >= numSeamsX){
+                List<int[]> seamsY = findVerticalSeams(cumulativeEnergyMapY, numSeamsX);
+                for (int i = 0; i < seamsY.size(); i++) {
+                    int[] temp = seamsY.get(i);
+                    image = removeVerticalSeam(image, temp);
+                    energyMap = removeVerticalSeam(energyMap, temp);
+                    currentWidth--;
+                }
+            }
+            else{
+                int[] seam = findVerticalSeam(cumulativeEnergyMapY);
+                image = removeVerticalSeam(image, seam);
+                energyMap = removeVerticalSeam(energyMap,seam);
+                currentWidth--;
+            }
+        }
 
         return image;
     }
@@ -396,9 +444,11 @@ public class SeamCarver {
 
             for (int x = 0; x < height; x++) {
                 if (x < seamX) {
-                    newImage.setRGB(y, height - 1 - x, image.getRGB(y, height - x));
+                    //newImage.setRGB(y, height - 1 - x, image.getRGB(y, height - x));
+                    newImage.setRGB(y, x, image.getRGB(y, x));
                 } else {
-                    newImage.setRGB(y, height - 1 - x, image.getRGB(y,height - x - 1));
+                    //newImage.setRGB(y, height - 1 - x, image.getRGB(y,height - x - 1));
+                    newImage.setRGB(y, x, image.getRGB(y,x + 1));
                 }
             }
         }
@@ -416,9 +466,11 @@ public class SeamCarver {
 
             for (int x = 0; x < height; x++) {
                 if (x < seamX) {
-                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - x];
+                    //newEnergyMap[y][height - 1 - x] = energyMap[y][height - x];
+                    newEnergyMap[y][x] = energyMap[y][x];
                 } else {
-                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - 1 - x];
+                    //newEnergyMap[y][height - 1 - x] = energyMap[y][height - 1 - x];
+                    newEnergyMap[y][x] = energyMap[y][x + 1];
                 }
             }
         }
@@ -436,9 +488,11 @@ public class SeamCarver {
 
             for (int y = 0; y < width; y++) {
                 if (y < seamY) {
-                    newImage.setRGB(y, height - 1 - x, image.getRGB(y, height - 1 - x));
+                    //newImage.setRGB(y, height - 1 - x, image.getRGB(y, height - 1 - x));
+                    newImage.setRGB(y, x, image.getRGB(y, x));
                 } else {
-                    newImage.setRGB(y, height - 1 - x, image.getRGB(y + 1,height - x - 1));
+                    //newImage.setRGB(y, height - 1 - x, image.getRGB(y + 1,height - x - 1));
+                    newImage.setRGB(y, x, image.getRGB(y + 1,x));
                 }
             }
         }
