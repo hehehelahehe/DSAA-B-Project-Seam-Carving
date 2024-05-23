@@ -17,6 +17,9 @@ public class SeamCarver {
             int[] seam = findHorizontalSeam(cumulativeEnergyMap);
 
             image = removeHorizontalSeam(image, seam);
+            //每次删除后重新计算能量图
+            //energyMap = computeEnergyMap(image);
+            //同时将能量图删去相应的seam
             energyMap = removeHorizontalSeam(energyMap,seam);
             currentHeight--;
         }
@@ -25,6 +28,7 @@ public class SeamCarver {
             int[] seam = findVerticalSeam(cumulativeEnergyMap);
 
             image = removeVerticalSeam(image, seam);
+            //energyMap = computeEnergyMap(image);
             energyMap = removeVerticalSeam(energyMap,seam);
             currentWidth--;
         }
@@ -511,9 +515,9 @@ public class SeamCarver {
 
             for (int y = 0; y < width; y++) {
                 if (y < seamY) {
-                    newEnergyMap[y][height - 1 - x] = energyMap[y][height - 1 - x];
+                    newEnergyMap[y][x] = energyMap[y][x];
                 } else {
-                    newEnergyMap[y][height - 1 - x] = energyMap[y + 1][height - x - 1];
+                    newEnergyMap[y][x] = energyMap[y + 1][x];
                 }
             }
         }

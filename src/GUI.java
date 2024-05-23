@@ -301,9 +301,9 @@ public class GUI {
                         this.image = this.carvedImage;
                         this.rectangleDrawn = false;
                     }else{
-                        this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
+                        //this.carvedImage = seamCarver.shrinkImage(image, targetWidth, targetHeight);
                         //一次删除多条最小能量路径
-                        //this.carvedImage = seamCarver.shrinkImageMultiple(image, targetWidth, targetHeight);
+                        this.carvedImage = seamCarver.shrinkImageMultiple(image, targetWidth, targetHeight);
     
                         // 更新图像和标签显示
                         this.imageLabel.setIcon(new ImageIcon(carvedImage));
